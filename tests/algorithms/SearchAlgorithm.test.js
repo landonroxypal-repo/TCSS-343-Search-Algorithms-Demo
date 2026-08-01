@@ -1,8 +1,8 @@
 import { SearchAlgorithm } from "../../src/algorithms/SearchAlgorithm.js";
 
-// step() is redeclared with the same signature in every subclass (NaiveDFS,
-// BFS, Dijkstra, AStar), which signals SearchAlgorithm is meant to be
-// abstract rather than usable on its own.
+// The UML marks the constructor private ("- searchAlgorithm(): void"), and
+// step() is redeclared in every subclass (NaiveDFS, BFS, Dijkstra, AStar) -
+// SearchAlgorithm is abstract and only usable through a subclass.
 describe("SearchAlgorithm", () => {
   test("cannot be instantiated directly", () => {
     expect(() => new SearchAlgorithm()).toThrow();
