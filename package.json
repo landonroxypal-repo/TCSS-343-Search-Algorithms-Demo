@@ -1,0 +1,24 @@
+{
+  "name": "searchalgorithmsdemo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm "
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "jest": "^30.4.2",
+    "lowdb": "^7.0.1",
+    "nodemon": "^3.1.14"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
+  }
+}
