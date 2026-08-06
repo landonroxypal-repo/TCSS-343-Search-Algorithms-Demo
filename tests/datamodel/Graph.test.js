@@ -231,4 +231,78 @@ describe("Graph", () => {
       expect(graph.getNeighbors(secondWallId)).toEqual([]);
     });
   });
+
+  // setAllowDiagonals toggles whether getNeighbors includes diagonal
+  // neighbors. There is deliberately no getter for this flag - callers can
+  // only observe its effect through getNeighbors, per the UML.
+  describe("diagonal neighbors", () => {
+    test("does not include diagonal neighbors by default", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+      const neighbors = graph.getNeighbors(centerId);
+
+      expect(neighbors).toHaveLength(4);
+      const diagonalIds = [
+        graph.toId(0, 0),
+        graph.toId(0, 2),
+        graph.toId(2, 0),
+        graph.toId(2, 2),
+      ];
+      for (const diagonalId of diagonalIds) {
+        expect(neighbors).not.toContain(diagonalId);
+      }
+    });
+
+    test("setAllowDiagonals(true) makes diagonal neighbors traversable", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+
+      graph.setAllowDiagonals(true);
+      const neighbors = graph.getNeighbors(centerId);
+
+      expect(neighbors).toHaveLength(8);
+      const diagonalIds = [
+        graph.toId(0, 0),
+        graph.toId(0, 2),
+        graph.toId(2, 0),
+        graph.toId(2, 2),
+      ];
+      for (const diagonalId of diagonalIds) {
+        expect(neighbors).toContain(diagonalId);
+      }
+    });
+
+    test("setAllowDiagonals(false) removes diagonal neighbors again", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+
+      graph.setAllowDiagonals(true);
+      graph.setAllowDiagonals(false);
+
+      expect(graph.getNeighbors(centerId)).toHaveLength(4);
+    });
+
+    test("a corner vertex only gains its single in-bounds diagonal neighbor when enabled", () => {
+      const graph = new Graph(3, 3);
+      const cornerId = graph.toId(0, 0);
+
+      graph.setAllowDiagonals(true);
+      const neighbors = [...graph.getNeighbors(cornerId)].sort();
+
+      expect(neighbors).toEqual(
+        [graph.toId(0, 1), graph.toId(1, 0), graph.toId(1, 1)].sort(),
+      );
+    });
+
+    test("a Wall diagonal neighbor is still excluded when diagonals are enabled", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+      const diagonalWallId = graph.toId(0, 0);
+
+      graph.setAllowDiagonals(true);
+      graph.setState(diagonalWallId, VertexState.Wall);
+
+      expect(graph.getNeighbors(centerId)).not.toContain(diagonalWallId);
+    });
+  });
 });

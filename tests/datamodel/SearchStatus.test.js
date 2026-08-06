@@ -12,7 +12,7 @@ describe("SearchStatus", () => {
     expect(new Set(values).size).toBe(values.length);
   });
 
-  test("is frozen so statuses cannot be reassigned at runtime", () => {
+  test("is frozen so statuses cannotp be reassigned at runtime", () => {
     expect(Object.isFrozen(SearchStatus)).toBe(true);
   });
 });
