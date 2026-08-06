@@ -58,6 +58,10 @@ export class Graph {
     }
   }
 
+  getVertexCount() {
+    return this.width * this.height;
+  }
+
   toId(row, column) {
     return row * this.width + column;
   }

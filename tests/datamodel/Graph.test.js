@@ -12,6 +12,11 @@ describe("Graph", () => {
     }
   });
 
+  test("getVertexCount returns the total number of grid cells", () => {
+    const graph = new Graph(4, 3);
+    expect(graph.getVertexCount()).toBe(12);
+  });
+
   test("toId assigns a unique id to every cell in the grid", () => {
     const graph = new Graph(4, 3);
     const ids = new Set();

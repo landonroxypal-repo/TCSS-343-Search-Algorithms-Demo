@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { Graph } from "../../src/datamodel/Graph.js";
 import { VertexState } from "../../src/datamodel/VertexState.js";
 import { SearchStatus } from "../../src/datamodel/SearchStatus.js";
@@ -23,6 +24,20 @@ function buildWalledCorridor() {
   return graph;
 }
 
+function buildGridWithBarrier(width, height) {
+  // A width x height grid split down the middle by a solid wall column, so
+  // Start (top-left) and End (bottom-right) are never connected.
+  const graph = new Graph(width, height);
+  graph.setState(graph.toId(0, 0), VertexState.Start);
+  graph.setState(graph.toId(height - 1, width - 1), VertexState.End);
+
+  const barrierColumn = Math.floor(width / 2);
+  for (let row = 0; row < height; row++) {
+    graph.setState(graph.toId(row, barrierColumn), VertexState.Wall);
+  }
+  return graph;
+}
+
 function runToCompletion(algorithm, maxSteps = 500) {
   let status;
   for (let i = 0; i < maxSteps; i++) {
@@ -32,6 +47,33 @@ function runToCompletion(algorithm, maxSteps = 500) {
     }
   }
   return status;
+}
+
+// Walks previousVertex backward from End to Start using the algorithm's own
+// VertexInfo bookkeeping. Returns null if End was never reached (no solution
+// recoverable), or the recovered path (Start ... End) otherwise.
+function recoverPath(algorithm, graph) {
+  const vertexInfo = algorithm.getVertexInfo();
+  const startId = graph.getStartId();
+  const endId = graph.getEndId();
+
+  if (endId !== startId && vertexInfo[endId].getPreviousVertex() === null) {
+    return null;
+  }
+
+  const path = [endId];
+  let currentId = endId;
+  const maxHops = graph.getVertexCount();
+  for (let hops = 0; currentId !== startId; hops++) {
+    if (hops >= maxHops) {
+      throw new Error(
+        "recoverPath did not terminate - previousVertex chain may contain a cycle",
+      );
+    }
+    currentId = vertexInfo[currentId].getPreviousVertex();
+    path.push(currentId);
+  }
+  return path.reverse();
 }
 
 export function describeSearchAlgorithmContract(AlgorithmClass) {
@@ -44,6 +86,12 @@ export function describeSearchAlgorithmContract(AlgorithmClass) {
       const algorithm = new AlgorithmClass();
       algorithm.initialize(buildOpenGrid(3, 3));
       expect(algorithm.getVertexInfo()).toHaveLength(9);
+    });
+
+    test("throws if initialized on a graph with no start or end vertex", () => {
+      const algorithm = new AlgorithmClass();
+      const graph = new Graph(3, 3);
+      expect(() => algorithm.initialize(graph)).toThrow();
     });
 
     test("step returns a value from the SearchStatus enumeration", () => {
@@ -106,6 +154,56 @@ export function describeSearchAlgorithmContract(AlgorithmClass) {
       runToCompletion(algorithm);
 
       expect(visitedIds).not.toContain(graph.toId(0, 2));
+    });
+
+    test("recovers a path from Start to End on a larger grid when one exists", () => {
+      const algorithm = new AlgorithmClass();
+      const graph = buildOpenGrid(5, 5);
+      algorithm.initialize(graph);
+      runToCompletion(algorithm);
+
+      const path = recoverPath(algorithm, graph);
+
+      expect(path).not.toBeNull();
+      expect(path[0]).toBe(graph.getStartId());
+      expect(path[path.length - 1]).toBe(graph.getEndId());
+      for (let i = 1; i < path.length; i++) {
+        expect(graph.getNeighbors(path[i - 1])).toContain(path[i]);
+      }
+    });
+
+    test("recovers no path on a larger grid when none exists", () => {
+      const algorithm = new AlgorithmClass();
+      const graph = buildGridWithBarrier(5, 5);
+      algorithm.initialize(graph);
+      runToCompletion(algorithm);
+
+      expect(recoverPath(algorithm, graph)).toBeNull();
+    });
+
+    test("recovers a path from Start to End on a full-size (30x56) grid when one exists", () => {
+      const algorithm = new AlgorithmClass();
+      const graph = buildOpenGrid(30, 56);
+      algorithm.initialize(graph);
+      runToCompletion(algorithm, graph.getVertexCount() + 1);
+
+      const path = recoverPath(algorithm, graph);
+
+      expect(path).not.toBeNull();
+      expect(path[0]).toBe(graph.getStartId());
+      expect(path[path.length - 1]).toBe(graph.getEndId());
+      for (let i = 1; i < path.length; i++) {
+        expect(graph.getNeighbors(path[i - 1])).toContain(path[i]);
+      }
+    });
+
+    test("recovers no path on a full-size (30x56) grid when none exists", () => {
+      const algorithm = new AlgorithmClass();
+      const graph = buildGridWithBarrier(30, 56);
+      algorithm.initialize(graph);
+      runToCompletion(algorithm, graph.getVertexCount() + 1);
+
+      expect(recoverPath(algorithm, graph)).toBeNull();
     });
   });
 }
