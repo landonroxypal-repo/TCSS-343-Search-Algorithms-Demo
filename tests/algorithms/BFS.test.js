@@ -1,9 +1,8 @@
 import { BFS } from "../../src/algorithms/BFS.js";
-import { Graph } from "../../src/datamodel/Graph.js";
-import { VertexState } from "../../src/datamodel/VertexState.js";
 import {
   describeSearchAlgorithmContract,
   buildOpenGrid,
+  buildMazeWithSingleGap,
   buildGraphWithTailBeyondEnd,
   runToCompletion,
   recoverPath,
@@ -30,21 +29,6 @@ function shortestPathHopCount(graph, startId, endId) {
   }
 
   return null;
-}
-
-function buildMazeWithSingleGap() {
-  // 5x5 grid with row 2 walled off except a single gap at column 4, so the
-  // shortest Start->End path is forced into a long detour rather than
-  // matching the raw Manhattan distance between them.
-  const graph = new Graph(5, 5);
-  graph.setState(graph.toId(0, 0), VertexState.Start);
-  graph.setState(graph.toId(4, 0), VertexState.End);
-
-  for (let column = 0; column < 4; column++) {
-    graph.setState(graph.toId(2, column), VertexState.Wall);
-  }
-
-  return graph;
 }
 
 describe("BFS", () => {

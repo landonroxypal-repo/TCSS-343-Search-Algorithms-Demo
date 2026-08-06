@@ -57,6 +57,21 @@ export function buildGraphWithTailBeyondEnd(tailLength = 3) {
   return { graph, tailIds };
 }
 
+// A 5x5 grid with row 2 walled off except a single gap at column 4, so the
+// shortest Start->End path is forced into a long detour rather than
+// matching the raw Manhattan distance between them.
+export function buildMazeWithSingleGap() {
+  const graph = new Graph(5, 5);
+  graph.setState(graph.toId(0, 0), VertexState.Start);
+  graph.setState(graph.toId(4, 0), VertexState.End);
+
+  for (let column = 0; column < 4; column++) {
+    graph.setState(graph.toId(2, column), VertexState.Wall);
+  }
+
+  return graph;
+}
+
 export function runToCompletion(algorithm, maxSteps = 500) {
   let status;
   for (let i = 0; i < maxSteps; i++) {
@@ -93,6 +108,17 @@ export function recoverPath(algorithm, graph) {
     path.push(currentId);
   }
   return path.reverse();
+}
+
+// Sums the edge weight of each consecutive pair in a path recovered via
+// recoverPath. Assumes every consecutive pair is actually adjacent - true
+// for anything recoverPath returns, since it reads previousVertex links.
+export function pathWeight(graph, path) {
+  let totalWeight = 0;
+  for (let i = 1; i < path.length; i++) {
+    totalWeight += graph.getEdgeWeight(path[i - 1], path[i]);
+  }
+  return totalWeight;
 }
 
 export function describeSearchAlgorithmContract(AlgorithmClass) {
