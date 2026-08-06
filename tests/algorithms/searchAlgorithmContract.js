@@ -67,6 +67,15 @@ export function describeSearchAlgorithmContract(AlgorithmClass) {
       expect(onNodeVisited).toHaveBeenCalled();
     });
 
+    test("onNodeExpanded listeners are notified as the search runs", () => {
+      const algorithm = new AlgorithmClass();
+      algorithm.initialize(buildOpenGrid(3, 3));
+      const onNodeExpanded = jest.fn();
+      algorithm.onNodeExpanded.push(onNodeExpanded);
+      runToCompletion(algorithm);
+      expect(onNodeExpanded).toHaveBeenCalled();
+    });
+
     test("onSearchCompleted listeners are notified exactly once", () => {
       const algorithm = new AlgorithmClass();
       algorithm.initialize(buildOpenGrid(3, 3));
