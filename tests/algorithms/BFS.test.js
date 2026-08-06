@@ -66,7 +66,7 @@ describe("BFS", () => {
       );
 
       expect(path).not.toBeNull();
-      expect(shortestHopCount).toBe(12);
+      expect(shortestHopCount).toBe(8);
       expect(path.length - 1).toBe(shortestHopCount);
     });
   });

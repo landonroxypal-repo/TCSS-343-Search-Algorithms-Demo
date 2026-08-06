@@ -86,7 +86,7 @@ describe("Dijkstra", () => {
       );
 
       expect(path).not.toBeNull();
-      expect(shortestWeight).toBe(12);
+      expect(shortestWeight).toBe(8);
       expect(pathWeight(graph, path)).toBe(shortestWeight);
     });
   });

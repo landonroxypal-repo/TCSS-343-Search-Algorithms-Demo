@@ -24,7 +24,7 @@ export class Graph {
     this.vertexStates = new Array(size).fill(VertexState.Idle);
     this.startId = -1;
     this.endId = -1;
-    this.allowDiagonals = false;
+    this.allowDiagonals = true;
 
     this.adjacencyList = [];
     this.diagonalAdjacencyList = [];
