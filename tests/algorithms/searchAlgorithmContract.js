@@ -8,7 +8,7 @@ import { SearchAlgorithm } from "../../src/algorithms/SearchAlgorithm.js";
 // AStar) must satisfy per the UML. Call describeSearchAlgorithmContract(Class)
 // from each subclass's own test file instead of duplicating these cases.
 
-function buildOpenGrid(width, height) {
+export function buildOpenGrid(width, height) {
   const graph = new Graph(width, height);
   graph.setState(graph.toId(0, 0), VertexState.Start);
   graph.setState(graph.toId(height - 1, width - 1), VertexState.End);
@@ -38,7 +38,26 @@ function buildGridWithBarrier(width, height) {
   return graph;
 }
 
-function runToCompletion(algorithm, maxSteps = 500) {
+// A straight 1-row line: Start - middle - End - tail...tail. The tail
+// vertices are only reachable by continuing past End, so an algorithm that
+// terminates as soon as it finds End should never visit them. Not part of
+// the shared contract since Dijkstra (and, once weighted, A*/BestFirst)
+// cannot safely stop the instant End is first seen.
+export function buildGraphWithTailBeyondEnd(tailLength = 3) {
+  const width = 3 + tailLength;
+  const graph = new Graph(width, 1);
+  graph.setState(graph.toId(0, 0), VertexState.Start);
+  graph.setState(graph.toId(0, 2), VertexState.End);
+
+  const tailIds = [];
+  for (let column = 3; column < width; column++) {
+    tailIds.push(graph.toId(0, column));
+  }
+
+  return { graph, tailIds };
+}
+
+export function runToCompletion(algorithm, maxSteps = 500) {
   let status;
   for (let i = 0; i < maxSteps; i++) {
     status = algorithm.step();
@@ -52,7 +71,7 @@ function runToCompletion(algorithm, maxSteps = 500) {
 // Walks previousVertex backward from End to Start using the algorithm's own
 // VertexInfo bookkeeping. Returns null if End was never reached (no solution
 // recoverable), or the recovered path (Start ... End) otherwise.
-function recoverPath(algorithm, graph) {
+export function recoverPath(algorithm, graph) {
   const vertexInfo = algorithm.getVertexInfo();
   const startId = graph.getStartId();
   const endId = graph.getEndId();
