@@ -33,6 +33,7 @@ export class BFS extends SearchAlgorithm {
     if (currentId === this.graph.getEndId()) {
       this._complete();
       return this.status;
+    }
 
     for (const neighborId of this.graph.getNeighbors(currentId)) {
       if (!this.visitedVertices.has(neighborId)) {
