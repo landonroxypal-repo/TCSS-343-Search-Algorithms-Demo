@@ -3,4 +3,5 @@ export const Algorithm = Object.freeze({
   BFS: "BFS",
   Dijkstra: "Dijkstra",
   AStar: "AStar",
+  BestFirst: "BestFirst"
 });
