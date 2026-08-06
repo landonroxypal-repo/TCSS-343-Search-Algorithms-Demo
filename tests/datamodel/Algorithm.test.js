@@ -1,7 +1,7 @@
 import { Algorithm } from "../../src/datamodel/Algorithm.js";
 
 describe("Algorithm", () => {
-  const expectedKeys = ["NaiveDFS", "BFS", "Dijkstra", "AStar"];
+  const expectedKeys = ["NaiveDFS", "BFS", "Dijkstra", "AStar", "BestFirst"];
 
   test("defines exactly the algorithms from the UML enumeration", () => {
     expect(Object.keys(Algorithm).sort()).toEqual([...expectedKeys].sort());

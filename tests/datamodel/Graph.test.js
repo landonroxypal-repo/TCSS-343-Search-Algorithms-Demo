@@ -305,4 +305,70 @@ describe("Graph", () => {
       expect(graph.getNeighbors(centerId)).not.toContain(diagonalWallId);
     });
   });
+
+  // Analysis needs a full defensive copy of a Graph it's handed, but has no
+  // public way to learn width/height or read allowDiagonals - so Graph must
+  // be able to copy itself.
+  describe("copy", () => {
+    test("returns a Graph that is a different instance", () => {
+      const graph = new Graph(3, 3);
+      expect(graph.copy()).not.toBe(graph);
+    });
+
+    test("preserves every vertex's state", () => {
+      const graph = new Graph(3, 3);
+      graph.setState(graph.toId(0, 0), VertexState.Start);
+      graph.setState(graph.toId(2, 2), VertexState.End);
+      graph.setState(graph.toId(1, 1), VertexState.Wall);
+
+      const copy = graph.copy();
+
+      for (let row = 0; row < 3; row++) {
+        for (let column = 0; column < 3; column++) {
+          const id = graph.toId(row, column);
+          expect(copy.getState(id)).toBe(graph.getState(id));
+        }
+      }
+    });
+
+    test("preserves startId and endId", () => {
+      const graph = new Graph(3, 3);
+      graph.setState(graph.toId(0, 0), VertexState.Start);
+      graph.setState(graph.toId(2, 2), VertexState.End);
+
+      const copy = graph.copy();
+
+      expect(copy.getStartId()).toBe(graph.getStartId());
+      expect(copy.getEndId()).toBe(graph.getEndId());
+    });
+
+    test("preserves the allowDiagonals setting", () => {
+      const graph = new Graph(3, 3);
+      graph.setAllowDiagonals(true);
+
+      const copy = graph.copy();
+
+      expect(copy.getNeighbors(graph.toId(1, 1))).toHaveLength(8);
+    });
+
+    test("later mutations to the original do not leak into the copy", () => {
+      const graph = new Graph(3, 3);
+      const copy = graph.copy();
+      const id = graph.toId(0, 0);
+
+      graph.setState(id, VertexState.Wall);
+
+      expect(copy.getState(id)).toBe(VertexState.Idle);
+    });
+
+    test("mutating the copy does not affect the original", () => {
+      const graph = new Graph(3, 3);
+      const copy = graph.copy();
+      const id = graph.toId(0, 0);
+
+      copy.setState(id, VertexState.Wall);
+
+      expect(graph.getState(id)).toBe(VertexState.Idle);
+    });
+  });
 });

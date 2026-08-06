@@ -125,4 +125,13 @@ export class Graph {
     this.startId = -1;
     this.endId = -1;
   }
+
+  copy() {
+    const copy = new Graph(this.width, this.height);
+    for (let id = 0; id < this.vertexStates.length; id++) {
+      copy.setState(id, this.vertexStates[id]);
+    }
+    copy.allowDiagonals = this.allowDiagonals;
+    return copy;
+  }
 }
