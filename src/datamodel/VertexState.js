@@ -5,4 +5,5 @@ export const VertexState = Object.freeze({
   Visited: "Visited",
   Expanded: "Expanded",
   Wall: "Wall",
+  Path: "Path",
 });

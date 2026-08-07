@@ -37,8 +37,8 @@ const CELL_STATE_CLASS = {
   [VertexState.End]: "bg-rose-700",
   [VertexState.Visited]: "bg-emerald-100",
   [VertexState.Expanded]: "bg-emerald-400",
+  [VertexState.Path]: "bg-amber-500",
 };
-const PATH_CLASS = "bg-amber-500";
 
 const SPEED_DELAYS = { 1: 140, 2: 80, 3: 45, 4: 20, 5: 6 };
 
@@ -60,7 +60,6 @@ let runTimer = null;
 let operationsCount = 0;
 let expandedCount = 0;
 let elapsedMs = 0;
-let currentPathIds = new Set();
 let lastRunStats = null;
 let savedAnalyses = [];
 let selectedAnalysisIndex = -1;
@@ -90,10 +89,7 @@ document.getElementById("dims-readout").textContent = `${COLS} × ${ROWS}`;
 document.getElementById("analysis-dims-readout").textContent = `${COLS} × ${ROWS}`;
 
 function renderCell(id) {
-  const state = graph.getState(id);
-  const showPath =
-    currentPathIds.has(id) && state !== VertexState.Start && state !== VertexState.End;
-  cellEls[id].className = "h-5 w-5 " + (showPath ? PATH_CLASS : CELL_STATE_CLASS[state]);
+  cellEls[id].className = "h-5 w-5 " + CELL_STATE_CLASS[graph.getState(id)];
 }
 
 function renderBoard() {
@@ -169,7 +165,6 @@ document.getElementById("clear-board-button").addEventListener("click", () => {
   if (isRunning) return;
   graph.reset();
   seedDefaultStartEnd(graph);
-  currentPathIds = new Set();
   renderBoard();
   resetStats();
 });
@@ -251,11 +246,14 @@ function resetStats() {
 function clearRunVisuals() {
   for (let id = 0; id < COLS * ROWS; id++) {
     const state = graph.getState(id);
-    if (state === VertexState.Visited || state === VertexState.Expanded) {
+    if (
+      state === VertexState.Visited ||
+      state === VertexState.Expanded ||
+      state === VertexState.Path
+    ) {
       graph.setState(id, VertexState.Idle);
     }
   }
-  currentPathIds = new Set();
   renderBoard();
 }
 
@@ -323,7 +321,12 @@ function recoverPath() {
 function finishRun() {
   const path = recoverPath();
   const pathLength = path === null ? null : path.length - 1;
-  currentPathIds = path === null ? new Set() : new Set(path);
+  if (path !== null) {
+    // path[0] and path[path.length - 1] are Start/End - leave their state alone.
+    for (const id of path.slice(1, -1)) {
+      graph.setState(id, VertexState.Path);
+    }
+  }
   renderBoard();
 
   document.getElementById("stat-path-length").textContent =

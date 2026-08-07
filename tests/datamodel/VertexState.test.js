@@ -1,7 +1,7 @@
 import { VertexState } from "../../src/datamodel/VertexState.js";
 
 describe("VertexState", () => {
-  const expectedKeys = ["Idle", "Start", "End", "Visited", "Expanded", "Wall"];
+  const expectedKeys = ["Idle", "Start", "End", "Visited", "Expanded", "Wall", "Path"];
 
   test("defines exactly the states from the UML enumeration", () => {
     expect(Object.keys(VertexState).sort()).toEqual([...expectedKeys].sort());
