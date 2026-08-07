@@ -25,6 +25,7 @@ export class Graph {
     this.startId = -1;
     this.endId = -1;
     this.allowDiagonals = true;
+    this.realisticDiagonalWeights = false;
 
     this.adjacencyList = [];
     this.diagonalAdjacencyList = [];
@@ -76,6 +77,10 @@ export class Graph {
     this.allowDiagonals = allowDiagonals;
   }
 
+  setRealisticDiagonalWeights(realisticDiagonalWeights) {
+    this.realisticDiagonalWeights = realisticDiagonalWeights;
+  }
+
   getNeighbors(id) {
     if (this.vertexStates[id] === VertexState.Wall) {
       return [];
@@ -92,6 +97,9 @@ export class Graph {
   getEdgeWeight(fromId, toId) {
     if (this.adjacencyList[fromId].has(toId)) {
       return this.adjacencyList[fromId].get(toId);
+    }
+    if (this.realisticDiagonalWeights) {
+      return Math.SQRT2;
     }
     return this.diagonalAdjacencyList[fromId].get(toId);
   }
@@ -136,6 +144,7 @@ export class Graph {
       copy.setState(id, this.vertexStates[id]);
     }
     copy.allowDiagonals = this.allowDiagonals;
+    copy.realisticDiagonalWeights = this.realisticDiagonalWeights;
     return copy;
   }
 }

@@ -111,8 +111,6 @@ toolInputs.forEach((input) => {
   });
 });
 
-// Can erase start/end, that is a problem!
-
 function applyTool(id) {
   if (isRunning) return;
   const state = graph.getState(id);
@@ -121,6 +119,7 @@ function applyTool(id) {
     if (state === VertexState.Start || state === VertexState.End) return;
     graph.setState(id, VertexState.Wall);
   } else if (tool === "erase") {
+    if (state === VertexState.Start || state === VertexState.End) return;
     graph.setState(id, VertexState.Idle);
   } else if (tool === "start") {
     if (state === VertexState.Wall || state === VertexState.End) return;
@@ -160,10 +159,11 @@ boardEl.addEventListener("pointermove", (e) => {
   if (isPointerDown) applyTool(id);
 });
 
-// not always working, need to investigate
-window.addEventListener("pointerup", () => {
+function stopPainting() {
   isPointerDown = false;
-});
+}
+window.addEventListener("pointerup", stopPainting);
+window.addEventListener("pointercancel", stopPainting);
 
 document.getElementById("clear-board-button").addEventListener("click", () => {
   if (isRunning) return;
@@ -206,10 +206,9 @@ document.getElementById("diagonal-toggle").addEventListener("change", (e) => {
   graph.setAllowDiagonals(e.target.checked);
 });
 
-// "Realistic diagonal weight" is intentionally left wired to nothing:
-// Graph.js has no support for non-flat diagonal edge cost yet (see the
-// caveat in CLAUDE.md), so there's nothing for this toggle to control
-// until that model gap is addressed.
+document.getElementById("diagonal-weight-toggle").addEventListener("change", (e) => {
+  graph.setRealisticDiagonalWeights(e.target.checked);
+});
 
 let speed = 3;
 document.getElementById("speed-slider").addEventListener("input", (e) => {
@@ -233,6 +232,7 @@ function setControlsEnabled(runningNow) {
   heuristicInputs.forEach((i) => (i.disabled = runningNow));
   toolInputs.forEach((i) => (i.disabled = runningNow));
   document.getElementById("diagonal-toggle").disabled = runningNow;
+  document.getElementById("diagonal-weight-toggle").disabled = runningNow;
 }
 
 function resetStats() {

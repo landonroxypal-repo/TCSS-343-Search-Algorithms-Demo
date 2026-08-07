@@ -320,6 +320,55 @@ describe("Graph", () => {
     });
   });
 
+  // setRealisticDiagonalWeights toggles whether diagonal edges cost Math.SQRT2
+  // instead of the flat orthogonal weight. Off by default so existing
+  // shortest-path assumptions elsewhere are unaffected unless a caller opts in.
+  describe("realistic diagonal weight", () => {
+    test("diagonal edges carry the same flat weight as orthogonal edges by default", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+      const orthogonalId = graph.toId(0, 1);
+      const diagonalId = graph.toId(0, 0);
+
+      expect(graph.getEdgeWeight(centerId, diagonalId)).toBe(
+        graph.getEdgeWeight(centerId, orthogonalId),
+      );
+    });
+
+    test("setRealisticDiagonalWeights(true) weights diagonal edges as Math.SQRT2", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+      const diagonalId = graph.toId(0, 0);
+
+      graph.setRealisticDiagonalWeights(true);
+
+      expect(graph.getEdgeWeight(centerId, diagonalId)).toBe(Math.SQRT2);
+    });
+
+    test("setRealisticDiagonalWeights(true) leaves orthogonal edge weight unchanged", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+      const orthogonalId = graph.toId(0, 1);
+      const originalWeight = graph.getEdgeWeight(centerId, orthogonalId);
+
+      graph.setRealisticDiagonalWeights(true);
+
+      expect(graph.getEdgeWeight(centerId, orthogonalId)).toBe(originalWeight);
+    });
+
+    test("setRealisticDiagonalWeights(false) restores the flat diagonal weight", () => {
+      const graph = new Graph(3, 3);
+      const centerId = graph.toId(1, 1);
+      const diagonalId = graph.toId(0, 0);
+      const flatWeight = graph.getEdgeWeight(centerId, diagonalId);
+
+      graph.setRealisticDiagonalWeights(true);
+      graph.setRealisticDiagonalWeights(false);
+
+      expect(graph.getEdgeWeight(centerId, diagonalId)).toBe(flatWeight);
+    });
+  });
+
   // Analysis needs a full defensive copy of a Graph it's handed, but has no
   // public way to learn width/height or read allowDiagonals - so Graph must
   // be able to copy itself.
@@ -363,6 +412,17 @@ describe("Graph", () => {
       const copy = graph.copy();
 
       expect(copy.getNeighbors(graph.toId(1, 1))).toHaveLength(8);
+    });
+
+    test("preserves the realisticDiagonalWeights setting", () => {
+      const graph = new Graph(3, 3);
+      graph.setRealisticDiagonalWeights(true);
+
+      const copy = graph.copy();
+
+      expect(copy.getEdgeWeight(graph.toId(1, 1), graph.toId(0, 0))).toBe(
+        Math.SQRT2,
+      );
     });
 
     test("later mutations to the original do not leak into the copy", () => {
