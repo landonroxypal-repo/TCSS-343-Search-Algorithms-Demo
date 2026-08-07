@@ -31,14 +31,14 @@ const ALGORITHM_LABELS = {
 };
 
 const CELL_STATE_CLASS = {
-  [VertexState.Idle]: "bg-cell-idle",
-  [VertexState.Wall]: "bg-cell-wall",
-  [VertexState.Start]: "bg-cell-start",
-  [VertexState.End]: "bg-cell-end",
-  [VertexState.Visited]: "bg-cell-visited",
-  [VertexState.Expanded]: "bg-cell-expanded",
+  [VertexState.Idle]: "bg-white",
+  [VertexState.Wall]: "bg-stone-900",
+  [VertexState.Start]: "bg-emerald-700",
+  [VertexState.End]: "bg-rose-700",
+  [VertexState.Visited]: "bg-emerald-100",
+  [VertexState.Expanded]: "bg-emerald-400",
 };
-const PATH_CLASS = "bg-cell-path";
+const PATH_CLASS = "bg-amber-500";
 
 const SPEED_DELAYS = { 1: 140, 2: 80, 3: 45, 4: 20, 5: 6 };
 
@@ -72,7 +72,7 @@ function buildBoardDom(container) {
   const els = new Array(COLS * ROWS);
   for (let id = 0; id < COLS * ROWS; id++) {
     const el = document.createElement("div");
-    el.className = "h-5 w-5 bg-cell-idle";
+    el.className = "h-5 w-5 bg-white";
     el.dataset.id = String(id);
     container.appendChild(el);
     els[id] = el;
@@ -245,7 +245,7 @@ function resetStats() {
   document.getElementById("stat-path-length").textContent = "N/A";
   document.getElementById("stat-elapsed").textContent = "N/A";
   resultNote.textContent = "";
-  resultNote.className = "mt-2.5 min-h-4 text-xs text-app-ink-muted";
+  resultNote.className = "mt-2.5 min-h-4 text-xs text-stone-600";
 }
 
 function clearRunVisuals() {
@@ -332,10 +332,10 @@ function finishRun() {
 
   if (pathLength === null) {
     resultNote.textContent = "End is unreachable from Start.";
-    resultNote.className = "mt-2.5 min-h-4 text-xs text-cell-end";
+    resultNote.className = "mt-2.5 min-h-4 text-xs text-rose-700";
   } else {
     resultNote.textContent = `Path found! ${pathLength} steps.`;
-    resultNote.className = "mt-2.5 min-h-4 text-xs text-cell-start";
+    resultNote.className = "mt-2.5 min-h-4 text-xs text-emerald-700";
   }
 
   lastRunStats = new Statistics(pathLength, operationsCount, expandedCount, elapsedMs);
@@ -412,8 +412,8 @@ function renderAnalysisList() {
     button.className =
       "w-full rounded-md border px-2.5 py-1.5 text-left text-xs " +
       (index === selectedAnalysisIndex
-        ? "border-app-accent bg-app-surface-sunken"
-        : "border-app-border");
+        ? "border-slate-600 bg-stone-200"
+        : "border-stone-300");
     button.textContent = analysisLabel(analysis);
     button.addEventListener("click", () => selectAnalysis(index));
     li.appendChild(button);
