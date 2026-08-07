@@ -2,11 +2,12 @@ import { SearchAlgorithm } from "./SearchAlgorithm.js";
 import { SearchStatus } from "../datamodel/SearchStatus.js";
 import { Heuristic } from "../datamodel/Heuristic.js";
 import { VertexInfo } from "../datamodel/VertexInfo.js";
+import { PriorityQueue } from "./PriorityQueue.js";
 
 export class AStar extends SearchAlgorithm {
   constructor() {
     super();
-    this.dataStructure = [];
+    this._queue = new PriorityQueue();
     this._finalizedVertices = new Set();
     this.heuristic = Heuristic.None;
   }
@@ -21,7 +22,7 @@ export class AStar extends SearchAlgorithm {
 
   initialize(graph) {
     super.initialize(graph);
-    this.dataStructure = [];
+    this._queue = new PriorityQueue();
     this._finalizedVertices = new Set();
 
     for (let id = 0; id < this.vertexInfo.length; id++) {
@@ -31,10 +32,7 @@ export class AStar extends SearchAlgorithm {
     const startId = graph.getStartId();
     this.vertexInfo[startId].setCurrentPathLength(0);
     this._visit(startId);
-    this.dataStructure.push({
-      id: startId,
-      priority: this.vertexInfo[startId].getHeuristicCost(),
-    });
+    this._queue.enqueue(startId, this.vertexInfo[startId].getHeuristicCost());
   }
 
   step() {
@@ -71,11 +69,10 @@ export class AStar extends SearchAlgorithm {
         if (!this.visitedVertices.has(neighborId)) {
           this._visit(neighborId);
         }
-        this.dataStructure.push({
-          id: neighborId,
-          priority:
-            candidateDistance + this.vertexInfo[neighborId].getHeuristicCost(),
-        });
+        this._queue.enqueue(
+          neighborId,
+          candidateDistance + this.vertexInfo[neighborId].getHeuristicCost(),
+        );
       }
     }
 
@@ -84,29 +81,18 @@ export class AStar extends SearchAlgorithm {
 
   reset() {
     super.reset();
-    this.dataStructure = [];
+    this._queue = new PriorityQueue();
     this._finalizedVertices = new Set();
   }
 
   _popNextUnfinalized() {
-    while (this.dataStructure.length > 0) {
-      const index = this._indexOfMinPriority();
-      const [entry] = this.dataStructure.splice(index, 1);
-      if (!this._finalizedVertices.has(entry.id)) {
-        return entry.id;
+    while (!this._queue.isEmpty()) {
+      const id = this._queue.dequeueMin();
+      if (!this._finalizedVertices.has(id)) {
+        return id;
       }
     }
     return null;
-  }
-
-  _indexOfMinPriority() {
-    let minIndex = 0;
-    for (let i = 1; i < this.dataStructure.length; i++) {
-      if (this.dataStructure[i].priority < this.dataStructure[minIndex].priority) {
-        minIndex = i;
-      }
-    }
-    return minIndex;
   }
 
   _estimateRemainingCost(id) {

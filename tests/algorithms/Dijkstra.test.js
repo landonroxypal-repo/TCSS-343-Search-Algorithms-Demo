@@ -1,4 +1,6 @@
 import { Dijkstra } from "../../src/algorithms/Dijkstra.js";
+import { Graph } from "../../src/datamodel/Graph.js";
+import { VertexState } from "../../src/datamodel/VertexState.js";
 import {
   describeSearchAlgorithmContract,
   buildOpenGrid,
@@ -87,6 +89,34 @@ describe("Dijkstra", () => {
 
       expect(path).not.toBeNull();
       expect(shortestWeight).toBe(8);
+      expect(pathWeight(graph, path)).toBe(shortestWeight);
+    });
+
+    test("still finds the shortest-weight path when a vertex is relaxed more than once", () => {
+      // Row 3 is walled except at column 0 and column 3, forcing two
+      // separate gaps down to row 4. With realistic diagonal weights the
+      // two routes cost differently, so vertex (4,2) is first discovered
+      // via the pricier gap and later re-relaxed via the cheaper one - the
+      // scenario the priority queue's lazy deletion exists to handle.
+      const graph = new Graph(4, 5);
+      graph.setRealisticDiagonalWeights(true);
+      graph.setState(graph.toId(3, 1), VertexState.Wall);
+      graph.setState(graph.toId(3, 2), VertexState.Wall);
+      graph.setState(graph.toId(0, 0), VertexState.Start);
+      graph.setState(graph.toId(4, 3), VertexState.End);
+
+      const algorithm = new Dijkstra();
+      algorithm.initialize(graph);
+      runToCompletion(algorithm, graph.getVertexCount() + 1);
+
+      const path = recoverPath(algorithm, graph);
+      const shortestWeight = shortestPathWeight(
+        graph,
+        graph.getStartId(),
+        graph.getEndId(),
+      );
+
+      expect(path).not.toBeNull();
       expect(pathWeight(graph, path)).toBe(shortestWeight);
     });
   });

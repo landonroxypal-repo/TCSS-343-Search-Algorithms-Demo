@@ -178,6 +178,19 @@ export function describeSearchAlgorithmContract(AlgorithmClass) {
       expect(onSearchCompleted).toHaveBeenCalledTimes(1);
     });
 
+    test("stepping again after Complete is a no-op that keeps returning Complete", () => {
+      const algorithm = new AlgorithmClass();
+      algorithm.initialize(buildOpenGrid(3, 3));
+      runToCompletion(algorithm);
+
+      const onSearchCompleted = jest.fn();
+      algorithm.onSearchCompleted.push(onSearchCompleted);
+      const status = algorithm.step();
+
+      expect(status).toBe(SearchStatus.Complete);
+      expect(onSearchCompleted).not.toHaveBeenCalled();
+    });
+
     test("reset lets the same instance be initialized and run again", () => {
       const algorithm = new AlgorithmClass();
       const graph = buildOpenGrid(3, 3);

@@ -131,6 +131,26 @@ describe("Graph", () => {
       expect(graph.getState(graph.getEndId())).toBe(VertexState.End);
     });
 
+    test("setState away from Start on the current start vertex clears startId", () => {
+      const graph = new Graph(3, 3);
+      const startId = graph.toId(0, 0);
+      graph.setState(startId, VertexState.Start);
+
+      graph.setState(startId, VertexState.Idle);
+
+      expect(graph.getStartId()).toBe(-1);
+    });
+
+    test("setState away from End on the current end vertex clears endId", () => {
+      const graph = new Graph(3, 3);
+      const endId = graph.toId(2, 2);
+      graph.setState(endId, VertexState.End);
+
+      graph.setState(endId, VertexState.Wall);
+
+      expect(graph.getEndId()).toBe(-1);
+    });
+
     test("reset clears startId and endId along with the vertex states", () => {
       const graph = new Graph(3, 3);
       graph.setState(graph.toId(0, 0), VertexState.Start);

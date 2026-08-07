@@ -2,11 +2,12 @@ import { SearchAlgorithm } from "./SearchAlgorithm.js";
 import { SearchStatus } from "../datamodel/SearchStatus.js";
 import { Heuristic } from "../datamodel/Heuristic.js";
 import { VertexInfo } from "../datamodel/VertexInfo.js";
+import { PriorityQueue } from "./PriorityQueue.js";
 
 export class BestFirst extends SearchAlgorithm {
   constructor() {
     super();
-    this.dataStructure = [];
+    this._queue = new PriorityQueue();
     this.heuristic = Heuristic.None;
   }
 
@@ -20,7 +21,7 @@ export class BestFirst extends SearchAlgorithm {
 
   initialize(graph) {
     super.initialize(graph);
-    this.dataStructure = [];
+    this._queue = new PriorityQueue();
 
     for (let id = 0; id < this.vertexInfo.length; id++) {
       this.vertexInfo[id] = new VertexInfo(this._estimateRemainingCost(id));
@@ -29,10 +30,7 @@ export class BestFirst extends SearchAlgorithm {
     const startId = graph.getStartId();
     this.vertexInfo[startId].setCurrentPathLength(0);
     this._visit(startId);
-    this.dataStructure.push({
-      id: startId,
-      priority: this.vertexInfo[startId].getHeuristicCost(),
-    });
+    this._queue.enqueue(startId, this.vertexInfo[startId].getHeuristicCost());
   }
 
   step() {
@@ -40,12 +38,12 @@ export class BestFirst extends SearchAlgorithm {
       return this.status;
     }
 
-    if (this.dataStructure.length === 0) {
+    if (this._queue.isEmpty()) {
       this._complete();
       return this.status;
     }
 
-    const currentId = this._popNextMinPriority();
+    const currentId = this._queue.dequeueMin();
     this._expand(currentId);
 
     if (currentId === this.graph.getEndId()) {
@@ -61,10 +59,7 @@ export class BestFirst extends SearchAlgorithm {
           currentDistance + this.graph.getEdgeWeight(currentId, neighborId),
         );
         this._visit(neighborId);
-        this.dataStructure.push({
-          id: neighborId,
-          priority: this.vertexInfo[neighborId].getHeuristicCost(),
-        });
+        this._queue.enqueue(neighborId, this.vertexInfo[neighborId].getHeuristicCost());
       }
     }
 
@@ -73,17 +68,7 @@ export class BestFirst extends SearchAlgorithm {
 
   reset() {
     super.reset();
-    this.dataStructure = [];
-  }
-
-  _popNextMinPriority() {
-    let minIndex = 0;
-    for (let i = 1; i < this.dataStructure.length; i++) {
-      if (this.dataStructure[i].priority < this.dataStructure[minIndex].priority) {
-        minIndex = i;
-      }
-    }
-    return this.dataStructure.splice(minIndex, 1)[0].id;
+    this._queue = new PriorityQueue();
   }
 
   _estimateRemainingCost(id) {
