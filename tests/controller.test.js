@@ -918,3 +918,34 @@ describe("controller: dims readout", () => {
     expect(document.getElementById("analysis-dims-readout").textContent).toBe("30 × 20");
   });
 });
+
+describe("controller: analyses empty-state message", () => {
+  const emptyState = () => document.getElementById("analysis-empty-state");
+
+  test("is shown with its message when there are no saved analyses yet", async () => {
+    await loadController();
+
+    expect(emptyState().hidden).toBe(false);
+    expect(emptyState().textContent.trim()).toBe("No analyses found.");
+  });
+
+  test("is hidden once an analysis has been saved", async () => {
+    await loadController();
+    runToCompletion();
+    document.getElementById("save-button").click();
+
+    expect(emptyState().hidden).toBe(true);
+  });
+
+  test("reappears with its message once the last saved analysis is removed", async () => {
+    await loadController();
+    runToCompletion();
+    document.getElementById("save-button").click();
+    expect(emptyState().hidden).toBe(true);
+
+    document.querySelector("#analysis-list li button[aria-label='Remove saved analysis']").click();
+
+    expect(emptyState().hidden).toBe(false);
+    expect(emptyState().textContent.trim()).toBe("No analyses found.");
+  });
+});
