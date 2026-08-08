@@ -1,4 +1,4 @@
-// Add time to analysis, look at path being able to be painted over, and reset logic with buttons too, and ability to remove analyses
+// Look at path being able to be painted over, and reset logic with buttons too, and ability to remove analyses
 // Then refactor!!!
 
 import { Graph } from "../src/datamodel/Graph.js";
@@ -421,18 +421,55 @@ function renderAnalysisList() {
 
   savedAnalyses.forEach((analysis, index) => {
     const li = document.createElement("li");
+    li.className = "relative";
+
     const button = document.createElement("button");
     button.type = "button";
     button.className =
-      "w-full rounded-md border px-2.5 py-1.5 text-left text-xs " +
+      "w-full rounded-md border px-2.5 py-1.5 pr-7 text-left text-xs " +
       (index === selectedAnalysisIndex
         ? "border-slate-600 bg-stone-200"
         : "border-stone-300");
     button.textContent = analysisLabel(analysis);
     button.addEventListener("click", () => selectAnalysis(index));
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "X";
+    removeButton.setAttribute("aria-label", "Remove saved analysis");
+    removeButton.className =
+      "absolute right-1.5 top-1/2 -translate-y-1/2 rounded px-1 text-xs font-semibold text-stone-600 hover:text-rose-700";
+    removeButton.addEventListener("click", () => removeAnalysis(index));
+
     li.appendChild(button);
+    li.appendChild(removeButton);
     analysisListEl.appendChild(li);
   });
+}
+
+function deselectAnalysis() {
+  selectedAnalysisIndex = -1;
+  for (const el of analysisCellEls) {
+    el.className = "h-5 w-5 " + CELL_STATE_CLASS[VertexState.Idle];
+  }
+  analysisBoardEl.parentElement.classList.add("opacity-40");
+  analysisSourceEl.textContent = "No analysis selected";
+  document.getElementById("analysis-stat-path-length").textContent = "N/A";
+  document.getElementById("analysis-stat-operations").textContent = "N/A";
+  document.getElementById("analysis-stat-expanded").textContent = "N/A";
+  document.getElementById("analysis-stat-elapsed").textContent = "N/A";
+}
+
+function removeAnalysis(index) {
+  savedAnalyses.splice(index, 1);
+
+  if (selectedAnalysisIndex === index) {
+    deselectAnalysis();
+  } else if (selectedAnalysisIndex > index) {
+    selectedAnalysisIndex -= 1;
+  }
+
+  renderAnalysisList();
 }
 
 function selectAnalysis(index) {
