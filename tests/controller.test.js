@@ -9,9 +9,11 @@
 // query string forces re-evaluation of controller.js on every import -
 // otherwise every test after the first would reuse the first test's module
 // instance and its leftover state.
+import { jest } from "@jest/globals";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
+import { Graph } from "../src/datamodel/Graph.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const indexHtml = readFileSync(
@@ -30,6 +32,12 @@ async function loadController() {
 
 function selectRadio(name, value) {
   document.querySelector(`input[name="${name}"][value="${value}"]`).click();
+}
+
+function setSpeed(value) {
+  const slider = document.getElementById("speed-slider");
+  slider.value = String(value);
+  slider.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function runToCompletion() {
@@ -107,4 +115,79 @@ describe("controller: algorithm and heuristic radio buttons", () => {
       expect(analysisListText).toContain(heuristicValue);
     },
   );
+});
+
+describe("controller: board/run settings", () => {
+  // Default board is 30x20 with Start at (0,0) and End at (19,29), so the
+  // shortest-hop-count BFS path length is a fixed, exact number: the
+  // Chebyshev distance (29) when diagonal moves are allowed, or the
+  // Manhattan distance (48) when they're not. That gives a real,
+  // deterministic behavioral signal that the checkbox's mutation actually
+  // reached the Graph, rather than just checking a call was made.
+  test("disabling diagonal movement forces a longer, all-orthogonal shortest path", async () => {
+    await loadController();
+    runToCompletion();
+    const diagonalPathLength = Number(
+      document.getElementById("stat-path-length").textContent,
+    );
+    expect(diagonalPathLength).toBe(29);
+
+    await loadController();
+    document.getElementById("diagonal-toggle").click();
+    runToCompletion();
+    const orthogonalPathLength = Number(
+      document.getElementById("stat-path-length").textContent,
+    );
+    expect(orthogonalPathLength).toBe(48);
+  });
+
+  // Diagonal moves stay strictly cheaper per unit of displacement than
+  // orthogonal ones even at the "realistic" sqrt(2) weight (documented
+  // caveat in CLAUDE.md), so no board/path configuration can make this
+  // setting observably change which path gets chosen or how many steps run
+  // - there's no "weight" stat displayed anywhere to check either. The only
+  // thing actually testable from the controller's public surface is that
+  // the checkbox forwards its value to the Graph, so this spies on the
+  // model method rather than asserting a behavioral difference.
+  test("checking 'realistic diagonal weight' forwards the value to the graph", async () => {
+    const spy = jest.spyOn(Graph.prototype, "setRealisticDiagonalWeights");
+    await loadController();
+
+    document.getElementById("diagonal-weight-toggle").click();
+    expect(spy).toHaveBeenLastCalledWith(true);
+
+    document.getElementById("diagonal-weight-toggle").click();
+    expect(spy).toHaveBeenLastCalledWith(false);
+
+    spy.mockRestore();
+  });
+
+  // The setInterval delay is read once, at the moment Run is clicked, so
+  // the speed must be selected beforehand - matches the existing
+  // controls-lock behavior that keeps the speed slider disabled once a run
+  // session is active.
+  test("a higher playback speed runs more algorithm steps in the same amount of time", async () => {
+    jest.useFakeTimers();
+
+    await loadController();
+    setSpeed(1);
+    document.getElementById("run-button").click();
+    jest.advanceTimersByTime(300);
+    const slowOperations = Number(
+      document.getElementById("stat-operations").textContent,
+    );
+    jest.clearAllTimers();
+
+    await loadController();
+    setSpeed(5);
+    document.getElementById("run-button").click();
+    jest.advanceTimersByTime(300);
+    const fastOperations = Number(
+      document.getElementById("stat-operations").textContent,
+    );
+
+    expect(fastOperations).toBeGreaterThan(slowOperations);
+
+    jest.useRealTimers();
+  });
 });
