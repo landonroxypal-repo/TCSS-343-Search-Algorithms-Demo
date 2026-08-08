@@ -754,6 +754,36 @@ describe("controller: paint tools", () => {
   });
 });
 
+describe("controller: board dimensions", () => {
+  test("the board is populated with the correct number of cells", async () => {
+    await loadController();
+    expect(document.querySelectorAll("#board > div")).toHaveLength(30 * 20);
+  });
+
+  test("the board has the correct number of columns", async () => {
+    await loadController();
+    expect(document.getElementById("board").style.gridTemplateColumns).toBe(
+      "repeat(30, 1.25rem)",
+    );
+  });
+
+  test("the board has the correct number of rows", async () => {
+    await loadController();
+    expect(document.getElementById("board").style.gridTemplateRows).toBe(
+      "repeat(20, 1.25rem)",
+    );
+  });
+
+  test("the saved-analysis board is populated with the same cell count, columns, and rows", async () => {
+    await loadController();
+    const analysisBoard = document.getElementById("analysis-board");
+
+    expect(document.querySelectorAll("#analysis-board > div")).toHaveLength(30 * 20);
+    expect(analysisBoard.style.gridTemplateColumns).toBe("repeat(30, 1.25rem)");
+    expect(analysisBoard.style.gridTemplateRows).toBe("repeat(20, 1.25rem)");
+  });
+});
+
 describe("controller: Clear board button", () => {
   const WALL_ID = 100; // (row 3, col 10)
   const NEW_START_ID = 50; // (row 1, col 20)
