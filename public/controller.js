@@ -472,7 +472,7 @@ function deselectAnalysis() {
     el.className = "h-5 w-5 " + CELL_STATE_CLASS[VertexState.Idle];
   }
   analysisBoardEl.parentElement.classList.add("opacity-40");
-  analysisSourceEl.textContent = ""; //"No analysis selected";
+  analysisSourceEl.textContent = "No analysis selected";
   document.getElementById("analysis-stat-path-length").textContent = "N/A";
   document.getElementById("analysis-stat-operations").textContent = "N/A";
   document.getElementById("analysis-stat-expanded").textContent = "N/A";

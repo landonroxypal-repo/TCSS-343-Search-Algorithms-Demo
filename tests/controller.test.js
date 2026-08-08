@@ -1082,4 +1082,16 @@ describe("controller: selecting a saved analysis", () => {
     expect(analysisCellState(100)).toBe("Wall");
     expect(analysisCellState(200)).not.toBe("Wall");
   });
+
+  test("deselecting (by removing the selected analysis) shows the 'No analysis selected' message, not an empty label", async () => {
+    await loadController();
+    runToCompletion();
+    document.getElementById("save-button").click(); // auto-selects it
+
+    expect(document.getElementById("analysis-source").textContent).not.toBe("");
+
+    document.querySelector("#analysis-list li button[aria-label='Remove saved analysis']").click();
+
+    expect(document.getElementById("analysis-source").textContent).toBe("No analysis selected");
+  });
 });
