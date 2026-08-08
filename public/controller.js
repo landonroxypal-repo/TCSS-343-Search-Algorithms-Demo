@@ -32,7 +32,7 @@ const ALGORITHM_LABELS = {
 
 const CELL_STATE_CLASS = {
   [VertexState.Idle]: "bg-white",
-  [VertexState.Wall]: "bg-stone-900",
+  [VertexState.Wall]: "bg-zinc-900",
   [VertexState.Start]: "bg-emerald-700",
   [VertexState.End]: "bg-rose-700",
   [VertexState.Visited]: "bg-emerald-100",

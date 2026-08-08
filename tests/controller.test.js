@@ -14,6 +14,7 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import { Graph } from "../src/datamodel/Graph.js";
+import { VertexState } from "../src/datamodel/VertexState.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const indexHtml = readFileSync(
@@ -49,6 +50,33 @@ function runToCompletion() {
   if (saveButton.disabled) {
     throw new Error("runToCompletion did not finish within the step budget");
   }
+}
+
+function boardCellEl(id) {
+  return document.querySelectorAll("#board > div")[id];
+}
+
+// Board painting is wired to "pointerdown", not "click" - a plain Event
+// with the right type is enough since the handler only reads e.target.
+function paintWall(id) {
+  boardCellEl(id).dispatchEvent(new Event("pointerdown", { bubbles: true }));
+}
+
+// Cell/swatch elements carry other utility classes (sizing, rounding) besides
+// their color, so comparisons are done on just the bg-* token rather than
+// the full class string.
+function cellBgClass(el) {
+  return [...el.classList].find((cls) => cls.startsWith("bg-"));
+}
+
+function legendSwatchBgClass(legendSelector, stateLabel) {
+  const item = [...document.querySelectorAll(`${legendSelector} li`)].find(
+    (li) => li.textContent.trim() === stateLabel,
+  );
+  if (!item) {
+    throw new Error(`No legend entry for "${stateLabel}" in ${legendSelector}`);
+  }
+  return cellBgClass(item.querySelector("span"));
 }
 
 describe("controller: saving an analysis", () => {
@@ -411,14 +439,6 @@ describe("controller: playback speed stays editable while paused", () => {
 });
 
 describe("controller: result-note reports whether a path was found", () => {
-  // Board painting is wired to "pointerdown", not "click" - a plain Event
-  // with the right type is enough since the handler only reads e.target.
-  function paintWall(id) {
-    document
-      .querySelectorAll("#board > div")
-      [id].dispatchEvent(new Event("pointerdown", { bubbles: true }));
-  }
-
   test("reports the path length in steps when End is reachable", async () => {
     await loadController();
     runToCompletion();
@@ -445,4 +465,101 @@ describe("controller: result-note reports whether a path was found", () => {
       "End is unreachable from Start.",
     );
   });
+});
+
+describe("controller: legend covers every vertex state", () => {
+  function legendLabels(legendSelector) {
+    return [...document.querySelectorAll(`${legendSelector} li`)].map((li) =>
+      li.textContent.trim(),
+    );
+  }
+
+  test.each(["#legend", "#analysis-legend"])(
+    "%s lists every VertexState exactly once",
+    async (legendSelector) => {
+      await loadController();
+      expect(legendLabels(legendSelector).sort()).toEqual(
+        Object.values(VertexState).sort(),
+      );
+    },
+  );
+
+  test.each(Object.values(VertexState))(
+    "the grid legend and the saved-analysis legend agree on the color for %s",
+    async (stateLabel) => {
+      await loadController();
+      expect(legendSwatchBgClass("#legend", stateLabel)).toBe(
+        legendSwatchBgClass("#analysis-legend", stateLabel),
+      );
+    },
+  );
+});
+
+describe("controller: cell coloring matches the legend for every vertex state", () => {
+  test("an untouched Idle cell uses the legend's Idle color", async () => {
+    await loadController();
+    expect(cellBgClass(boardCellEl(5))).toBe(legendSwatchBgClass("#legend", "Idle"));
+  });
+
+  test("a painted Wall cell uses the legend's Wall color", async () => {
+    await loadController();
+    paintWall(5);
+    expect(cellBgClass(boardCellEl(5))).toBe(legendSwatchBgClass("#legend", "Wall"));
+  });
+
+  test("the Start cell uses the legend's Start color", async () => {
+    await loadController();
+    expect(cellBgClass(boardCellEl(0))).toBe(legendSwatchBgClass("#legend", "Start"));
+  });
+
+  test("the End cell uses the legend's End color", async () => {
+    await loadController();
+    expect(cellBgClass(boardCellEl(19 * 30 + 29))).toBe(
+      legendSwatchBgClass("#legend", "End"),
+    );
+  });
+
+  test("Visited and Expanded cells that appear while stepping use the legend's colors", async () => {
+    await loadController();
+    const stepButton = document.getElementById("step-button");
+    for (let i = 0; i < 5; i++) stepButton.click();
+
+    const cells = [...document.querySelectorAll("#board > div")];
+    expect(cells.some((cell) => cellBgClass(cell) === legendSwatchBgClass("#legend", "Visited"))).toBe(true);
+    expect(cells.some((cell) => cellBgClass(cell) === legendSwatchBgClass("#legend", "Expanded"))).toBe(true);
+  });
+
+  test("Path cells that appear after a completed run use the legend's Path color", async () => {
+    await loadController();
+    runToCompletion();
+
+    const cells = [...document.querySelectorAll("#board > div")];
+    expect(cells.some((cell) => cellBgClass(cell) === legendSwatchBgClass("#legend", "Path"))).toBe(true);
+  });
+});
+
+describe("controller: saved-analysis grid cell coloring matches its legend", () => {
+  // Visited is deliberately excluded here: on a completed run every cell
+  // that was ever visited generally ends up expanded too by the time End is
+  // reached, so a leftover visited-but-unexpanded cell isn't a reliable
+  // fixture on this board. It's still covered by the mid-run test above,
+  // which uses the exact same CELL_STATE_CLASS mapping and rendering
+  // pattern this describe block is really checking (that selectAnalysis's
+  // cell-coloring loop stays consistent with the legend).
+  test.each(["Wall", "Start", "End", "Expanded", "Path"])(
+    "a saved run's %s cells use the saved-analysis legend's color",
+    async (label) => {
+      await loadController();
+
+      // One wall that doesn't block the path, so the saved run still finds
+      // one (exercising Path) while also having a Wall cell to check.
+      paintWall(2);
+      runToCompletion();
+      document.getElementById("save-button").click();
+
+      const cells = [...document.querySelectorAll("#analysis-board > div")];
+      const expectedBg = legendSwatchBgClass("#analysis-legend", label);
+      expect(cells.some((cell) => cellBgClass(cell) === expectedBg)).toBe(true);
+    },
+  );
 });
