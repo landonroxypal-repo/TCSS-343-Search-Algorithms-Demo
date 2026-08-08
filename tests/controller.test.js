@@ -41,13 +41,20 @@ function setSpeed(value) {
   slider.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
+// Loops on result-note being empty rather than saveButton.disabled - Clear
+// Board nulls lastRunStats via resetStats() but never recomputes
+// saveButton.disabled (only setControlsEnabled does that), so after a prior
+// save-then-clear the button is already (stale-)enabled and that guard would
+// never trip. result-note is reliably blanked by resetStats() on every
+// Reset/Clear Board/new-session start, and only ever set non-empty by a
+// completed run, so it doesn't share that gap.
 function runToCompletion() {
   const stepButton = document.getElementById("step-button");
-  const saveButton = document.getElementById("save-button");
-  for (let i = 0; i < 5000 && saveButton.disabled; i++) {
+  const resultNote = document.getElementById("result-note");
+  for (let i = 0; i < 5000 && resultNote.textContent === ""; i++) {
     stepButton.click();
   }
-  if (saveButton.disabled) {
+  if (resultNote.textContent === "") {
     throw new Error("runToCompletion did not finish within the step budget");
   }
 }
@@ -91,6 +98,17 @@ function cellState(id) {
   const bg = cellBgClass(boardCellEl(id));
   return Object.values(VertexState).find(
     (state) => legendSwatchBgClass("#legend", state) === bg,
+  );
+}
+
+function analysisBoardCellEl(id) {
+  return document.querySelectorAll("#analysis-board > div")[id];
+}
+
+function analysisCellState(id) {
+  const bg = cellBgClass(analysisBoardCellEl(id));
+  return Object.values(VertexState).find(
+    (state) => legendSwatchBgClass("#analysis-legend", state) === bg,
   );
 }
 
@@ -947,5 +965,121 @@ describe("controller: analyses empty-state message", () => {
 
     expect(emptyState().hidden).toBe(false);
     expect(emptyState().textContent.trim()).toBe("No analyses found.");
+  });
+});
+
+describe("controller: remove-analysis button", () => {
+  test("removes only the clicked entry, leaving the others in place", async () => {
+    await loadController();
+
+    // Save two distinct analyses: default BFS, then AStar+Manhattan.
+    runToCompletion();
+    document.getElementById("save-button").click();
+
+    document.getElementById("reset-button").click();
+    selectRadio("algorithm", "AStar");
+    selectRadio("heuristic", "Manhattan");
+    runToCompletion();
+    document.getElementById("save-button").click();
+
+    expect(document.querySelectorAll("#analysis-list li")).toHaveLength(2);
+
+    document
+      .querySelectorAll("#analysis-list li")[0]
+      .querySelector("button[aria-label='Remove saved analysis']")
+      .click();
+
+    const remaining = document.querySelectorAll("#analysis-list li");
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].textContent).toContain("A*");
+  });
+});
+
+describe("controller: saved analysis entries show algorithm, heuristic, and save time", () => {
+  test("an entry for a non-heuristic algorithm shows its algorithm name and save time, with no heuristic segment", async () => {
+    await loadController();
+    runToCompletion(); // default BFS, no heuristic
+    document.getElementById("save-button").click();
+
+    const entryText = document.querySelector("#analysis-list li button").textContent;
+    expect(entryText).toContain("BFS");
+    expect(entryText).not.toContain("Manhattan");
+    expect(entryText).not.toContain("None");
+    expect(entryText).toMatch(/\d{1,2}:\d{2}\s?[AP]M/);
+  });
+
+  test("an entry for a heuristic algorithm shows its algorithm name, heuristic, and save time", async () => {
+    await loadController();
+    selectRadio("algorithm", "AStar");
+    selectRadio("heuristic", "Chebyshev");
+    runToCompletion();
+    document.getElementById("save-button").click();
+
+    const entryText = document.querySelector("#analysis-list li button").textContent;
+    expect(entryText).toContain("A*");
+    expect(entryText).toContain("Chebyshev");
+    expect(entryText).toMatch(/\d{1,2}:\d{2}\s?[AP]M/);
+  });
+});
+
+describe("controller: selecting a saved analysis", () => {
+  // Each <li> holds two buttons (select, then remove "X"), so a flat
+  // `#analysis-list li button` query interleaves both kinds - scope to the
+  // entry first, then take its first (select) button.
+  function selectButtonFor(entryIndex) {
+    return document
+      .querySelectorAll("#analysis-list li")
+      [entryIndex].querySelector("button");
+  }
+
+  test("updates the analysis-source label to the selected analysis's own label", async () => {
+    await loadController();
+    runToCompletion(); // BFS
+    document.getElementById("save-button").click(); // auto-selects analysis 0
+
+    const label0 = selectButtonFor(0).textContent;
+    expect(document.getElementById("analysis-source").textContent).toBe(label0);
+
+    document.getElementById("reset-button").click();
+    selectRadio("algorithm", "AStar");
+    selectRadio("heuristic", "Chebyshev");
+    runToCompletion();
+    document.getElementById("save-button").click(); // auto-selects analysis 1
+
+    const label1 = selectButtonFor(1).textContent;
+    expect(document.getElementById("analysis-source").textContent).toBe(label1);
+    expect(label1).not.toBe(label0);
+
+    // Switching back to the first entry should switch the label back too.
+    selectButtonFor(0).click();
+    expect(document.getElementById("analysis-source").textContent).toBe(label0);
+  });
+
+  test("loads the selected analysis's own saved board state, not a stale or blank one", async () => {
+    await loadController();
+
+    // Analysis A: wall at 100.
+    paintCell(100);
+    runToCompletion();
+    document.getElementById("save-button").click();
+
+    // Fully independent slate for Analysis B (Reset alone wouldn't clear
+    // walls, only run-progress visuals).
+    document.getElementById("clear-board-button").click();
+
+    // Analysis B: wall at 200 instead. Note: on this open board a BFS run
+    // realistically visits/expands nearly every non-wall cell before
+    // reaching the far-corner End, so "not a wall" doesn't mean "Idle" -
+    // the identity of each analysis's own wall is the robust signal here.
+    paintCell(200);
+    runToCompletion();
+    document.getElementById("save-button").click(); // auto-selects analysis B
+
+    expect(analysisCellState(200)).toBe("Wall");
+
+    // Switch back to Analysis A - its own wall is at 100, not 200.
+    selectButtonFor(0).click();
+    expect(analysisCellState(100)).toBe("Wall");
+    expect(analysisCellState(200)).not.toBe("Wall");
   });
 });
