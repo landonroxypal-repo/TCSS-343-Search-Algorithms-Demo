@@ -34,6 +34,11 @@ export class Dijkstra extends SearchAlgorithm {
     this._finalizedVertices.add(currentId);
     this._expand(currentId);
 
+    if (currentId === this.graph.getEndId()) {
+      this._complete();
+      return this.status;
+    }
+
     const currentDistance = this.vertexInfo[currentId].getCurrentPathLength();
     for (const neighborId of this.graph.getNeighbors(currentId)) {
       if (this._finalizedVertices.has(neighborId)) {

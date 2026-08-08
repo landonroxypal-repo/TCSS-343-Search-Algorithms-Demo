@@ -5,6 +5,7 @@ import {
   describeSearchAlgorithmContract,
   buildOpenGrid,
   buildMazeWithSingleGap,
+  buildGraphWithTailBeyondEnd,
   runToCompletion,
   recoverPath,
   pathWeight,
@@ -118,6 +119,22 @@ describe("Dijkstra", () => {
 
       expect(path).not.toBeNull();
       expect(pathWeight(graph, path)).toBe(shortestWeight);
+    });
+  });
+
+  describe("early termination", () => {
+    test("stops as soon as End is finalized and never visits vertices beyond it", () => {
+      const { graph, tailIds } = buildGraphWithTailBeyondEnd(3);
+      const algorithm = new Dijkstra();
+      algorithm.initialize(graph);
+
+      const visitedIds = [];
+      algorithm.onNodeVisited.push((id) => visitedIds.push(id));
+      runToCompletion(algorithm);
+
+      for (const tailId of tailIds) {
+        expect(visitedIds).not.toContain(tailId);
+      }
     });
   });
 });
