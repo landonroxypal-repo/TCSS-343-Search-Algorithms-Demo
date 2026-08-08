@@ -191,3 +191,76 @@ describe("controller: board/run settings", () => {
     jest.useRealTimers();
   });
 });
+
+describe("controller: Run / Step / Reset / Save buttons", () => {
+  test("clicking Step advances the algorithm by exactly one step per click", async () => {
+    await loadController();
+    const stepButton = document.getElementById("step-button");
+    const opsEl = document.getElementById("stat-operations");
+
+    expect(opsEl.textContent).toBe("0");
+
+    stepButton.click();
+    const afterOneClick = Number(opsEl.textContent);
+    expect(afterOneClick).toBeGreaterThan(0);
+
+    stepButton.click();
+    const afterTwoClicks = Number(opsEl.textContent);
+    expect(afterTwoClicks).toBeGreaterThan(afterOneClick);
+  });
+
+  test("clicking Run starts auto-stepping, and clicking it again pauses", async () => {
+    jest.useFakeTimers();
+    await loadController();
+    const runButton = document.getElementById("run-button");
+    const opsEl = document.getElementById("stat-operations");
+
+    expect(runButton.textContent.trim()).toBe("Run");
+
+    runButton.click();
+    expect(runButton.textContent.trim()).toBe("Pause");
+
+    jest.advanceTimersByTime(200);
+    const opsWhileRunning = Number(opsEl.textContent);
+    expect(opsWhileRunning).toBeGreaterThan(0);
+
+    runButton.click();
+    expect(runButton.textContent.trim()).toBe("Run");
+
+    jest.advanceTimersByTime(200);
+    const opsAfterPause = Number(opsEl.textContent);
+    expect(opsAfterPause).toBe(opsWhileRunning);
+
+    jest.useRealTimers();
+  });
+
+  test("clicking Reset clears progress, stats, and control locks back to their initial state", async () => {
+    await loadController();
+    const stepButton = document.getElementById("step-button");
+    const resetButton = document.getElementById("reset-button");
+
+    stepButton.click();
+    stepButton.click();
+    expect(Number(document.getElementById("stat-operations").textContent)).toBeGreaterThan(0);
+
+    resetButton.click();
+
+    expect(document.getElementById("stat-operations").textContent).toBe("0");
+    expect(document.getElementById("stat-path-length").textContent).toBe("N/A");
+    expect(document.getElementById("save-button").disabled).toBe(true);
+    expect(
+      document.querySelector('input[name="algorithm"][value="BFS"]').disabled,
+    ).toBe(false);
+  });
+
+  test("clicking Save adds the completed run to the analysis list", async () => {
+    await loadController();
+    runToCompletion();
+
+    expect(document.querySelectorAll("#analysis-list li")).toHaveLength(0);
+
+    document.getElementById("save-button").click();
+
+    expect(document.querySelectorAll("#analysis-list li")).toHaveLength(1);
+  });
+});
