@@ -56,10 +56,15 @@ function boardCellEl(id) {
   return document.querySelectorAll("#board > div")[id];
 }
 
-// Board painting is wired to "pointerdown", not "click" - a plain Event
-// with the right type is enough since the handler only reads e.target.
-function paintWall(id) {
+// Board painting is wired to "pointerdown"/"pointermove", not "click" - a
+// plain Event with the right type is enough since the handlers only read
+// e.target. Applies whichever tool is currently selected, not just walls.
+function paintCell(id) {
   boardCellEl(id).dispatchEvent(new Event("pointerdown", { bubbles: true }));
+}
+
+function dragOverCell(id) {
+  boardCellEl(id).dispatchEvent(new Event("pointermove", { bubbles: true }));
 }
 
 // Cell/swatch elements carry other utility classes (sizing, rounding) besides
@@ -77,6 +82,16 @@ function legendSwatchBgClass(legendSelector, stateLabel) {
     throw new Error(`No legend entry for "${stateLabel}" in ${legendSelector}`);
   }
   return cellBgClass(item.querySelector("span"));
+}
+
+// Reverse-looks-up a board cell's VertexState by matching its rendered color
+// against the (already independently tested) legend swatch colors, so these
+// tests read as state names rather than raw Tailwind classes.
+function cellState(id) {
+  const bg = cellBgClass(boardCellEl(id));
+  return Object.values(VertexState).find(
+    (state) => legendSwatchBgClass("#legend", state) === bg,
+  );
 }
 
 describe("controller: saving an analysis", () => {
@@ -456,7 +471,7 @@ describe("controller: result-note reports whether a path was found", () => {
     // full-height wall column blocks every possible route regardless of
     // whether diagonal movement is enabled.
     for (let row = 0; row < 20; row++) {
-      paintWall(row * 30 + 15);
+      paintCell(row * 30 + 15);
     }
 
     runToCompletion();
@@ -503,7 +518,7 @@ describe("controller: cell coloring matches the legend for every vertex state", 
 
   test("a painted Wall cell uses the legend's Wall color", async () => {
     await loadController();
-    paintWall(5);
+    paintCell(5);
     expect(cellBgClass(boardCellEl(5))).toBe(legendSwatchBgClass("#legend", "Wall"));
   });
 
@@ -553,7 +568,7 @@ describe("controller: saved-analysis grid cell coloring matches its legend", () 
 
       // One wall that doesn't block the path, so the saved run still finds
       // one (exercising Path) while also having a Wall cell to check.
-      paintWall(2);
+      paintCell(2);
       runToCompletion();
       document.getElementById("save-button").click();
 
@@ -612,5 +627,129 @@ describe("controller: all statistics labels show N/A when reset", () => {
     expect(document.getElementById("analysis-stat-operations").textContent).toBe("N/A");
     expect(document.getElementById("analysis-stat-expanded").textContent).toBe("N/A");
     expect(document.getElementById("analysis-stat-elapsed").textContent).toBe("N/A");
+  });
+});
+
+describe("controller: paint tools", () => {
+  const IDLE_CELL_ID = 100; // (row 3, col 10) - untouched by the default Start/End
+  const START_ID = 0; // (row 0, col 0)
+  const END_ID = 599; // (row 19, col 29)
+
+  test("Wall tool paints an Idle cell to Wall", async () => {
+    await loadController();
+    expect(cellState(IDLE_CELL_ID)).toBe("Idle");
+
+    paintCell(IDLE_CELL_ID);
+
+    expect(cellState(IDLE_CELL_ID)).toBe("Wall");
+  });
+
+  test("Wall tool cannot overwrite Start or End", async () => {
+    await loadController();
+
+    paintCell(START_ID);
+    expect(cellState(START_ID)).toBe("Start");
+
+    paintCell(END_ID);
+    expect(cellState(END_ID)).toBe("End");
+  });
+
+  test("Erase tool turns a Wall cell back to Idle", async () => {
+    await loadController();
+    paintCell(IDLE_CELL_ID);
+    expect(cellState(IDLE_CELL_ID)).toBe("Wall");
+
+    selectRadio("tool", "erase");
+    paintCell(IDLE_CELL_ID);
+
+    expect(cellState(IDLE_CELL_ID)).toBe("Idle");
+  });
+
+  test("Erase tool cannot remove Start or End", async () => {
+    await loadController();
+    selectRadio("tool", "erase");
+
+    paintCell(START_ID);
+    expect(cellState(START_ID)).toBe("Start");
+
+    paintCell(END_ID);
+    expect(cellState(END_ID)).toBe("End");
+  });
+
+  test("Start tool moves Start to a new cell and reverts the old one to Idle", async () => {
+    await loadController();
+    selectRadio("tool", "start");
+
+    paintCell(IDLE_CELL_ID);
+
+    expect(cellState(IDLE_CELL_ID)).toBe("Start");
+    expect(cellState(START_ID)).toBe("Idle");
+  });
+
+  test("Start tool cannot overwrite a Wall or the current End", async () => {
+    await loadController();
+    paintCell(IDLE_CELL_ID); // wall tool is selected by default
+
+    selectRadio("tool", "start");
+    paintCell(IDLE_CELL_ID);
+    expect(cellState(IDLE_CELL_ID)).toBe("Wall");
+
+    paintCell(END_ID);
+    expect(cellState(END_ID)).toBe("End");
+  });
+
+  test("End tool moves End to a new cell and reverts the old one to Idle", async () => {
+    await loadController();
+    selectRadio("tool", "end");
+
+    paintCell(IDLE_CELL_ID);
+
+    expect(cellState(IDLE_CELL_ID)).toBe("End");
+    expect(cellState(END_ID)).toBe("Idle");
+  });
+
+  test("End tool cannot overwrite a Wall or the current Start", async () => {
+    await loadController();
+    paintCell(IDLE_CELL_ID); // wall tool is selected by default
+
+    selectRadio("tool", "end");
+    paintCell(IDLE_CELL_ID);
+    expect(cellState(IDLE_CELL_ID)).toBe("Wall");
+
+    paintCell(START_ID);
+    expect(cellState(START_ID)).toBe("Start");
+  });
+
+  test("dragging across cells (pointerdown then pointermove) paints every cell crossed", async () => {
+    await loadController();
+
+    paintCell(IDLE_CELL_ID); // pointerdown - starts the drag and paints this cell
+    dragOverCell(IDLE_CELL_ID + 1);
+    dragOverCell(IDLE_CELL_ID + 2);
+
+    expect(cellState(IDLE_CELL_ID)).toBe("Wall");
+    expect(cellState(IDLE_CELL_ID + 1)).toBe("Wall");
+    expect(cellState(IDLE_CELL_ID + 2)).toBe("Wall");
+  });
+
+  test("releasing the pointer stops the drag from painting further cells", async () => {
+    await loadController();
+    paintCell(IDLE_CELL_ID); // pointerdown - starts the drag
+
+    window.dispatchEvent(new Event("pointerup"));
+    dragOverCell(IDLE_CELL_ID + 1);
+
+    expect(cellState(IDLE_CELL_ID + 1)).toBe("Idle");
+  });
+
+  test("painting is disabled while an algorithm is actively running", async () => {
+    await loadController();
+    const runButton = document.getElementById("run-button");
+    runButton.click(); // start running
+
+    paintCell(IDLE_CELL_ID);
+    expect(cellState(IDLE_CELL_ID)).toBe("Idle");
+
+    runButton.click(); // stop the interval before the test ends
   });
 });
