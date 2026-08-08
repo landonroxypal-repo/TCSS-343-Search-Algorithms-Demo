@@ -164,11 +164,11 @@ window.addEventListener("pointerup", stopPainting);
 window.addEventListener("pointercancel", stopPainting);
 
 document.getElementById("clear-board-button").addEventListener("click", () => {
-  // if (isRunning) return;
-  // graph.reset();
-  // seedDefaultStartEnd(graph);
-  // renderBoard();
-  // resetStats();
+  if (isRunning) return;
+  graph.reset();
+  seedDefaultStartEnd(graph);
+  renderBoard();
+  resetStats();
 });
 
 // ---- Algorithm / heuristic / settings ----

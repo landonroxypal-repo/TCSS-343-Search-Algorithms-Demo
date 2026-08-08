@@ -753,3 +753,57 @@ describe("controller: paint tools", () => {
     runButton.click(); // stop the interval before the test ends
   });
 });
+
+describe("controller: Clear board button", () => {
+  const WALL_ID = 100; // (row 3, col 10)
+  const NEW_START_ID = 50; // (row 1, col 20)
+  const NEW_END_ID = 555; // (row 18, col 15)
+  const DEFAULT_START_ID = 0; // (row 0, col 0)
+  const DEFAULT_END_ID = 599; // (row 19, col 29)
+  const clearBoardButton = () => document.getElementById("clear-board-button");
+
+  test("removes painted walls and restores the default Start/End positions", async () => {
+    await loadController();
+    paintCell(WALL_ID);
+    selectRadio("tool", "start");
+    paintCell(NEW_START_ID);
+    selectRadio("tool", "end");
+    paintCell(NEW_END_ID);
+
+    clearBoardButton().click();
+
+    expect(cellState(WALL_ID)).toBe("Idle");
+    expect(cellState(NEW_START_ID)).toBe("Idle");
+    expect(cellState(NEW_END_ID)).toBe("Idle");
+    expect(cellState(DEFAULT_START_ID)).toBe("Start");
+    expect(cellState(DEFAULT_END_ID)).toBe("End");
+  });
+
+  test("resets statistics back to N/A", async () => {
+    await loadController();
+    const stepButton = document.getElementById("step-button");
+    stepButton.click();
+    stepButton.click();
+    expect(Number(document.getElementById("stat-operations").textContent)).toBeGreaterThan(0);
+
+    clearBoardButton().click();
+
+    expect(document.getElementById("stat-path-length").textContent).toBe("N/A");
+    expect(document.getElementById("stat-operations").textContent).toBe("N/A");
+    expect(document.getElementById("stat-expanded").textContent).toBe("N/A");
+    expect(document.getElementById("stat-elapsed").textContent).toBe("N/A");
+  });
+
+  test("is disabled while an algorithm is actively running", async () => {
+    await loadController();
+    paintCell(WALL_ID);
+
+    const runButton = document.getElementById("run-button");
+    runButton.click(); // start running
+
+    clearBoardButton().click();
+    expect(cellState(WALL_ID)).toBe("Wall");
+
+    runButton.click(); // stop the interval before the test ends
+  });
+});
