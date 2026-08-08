@@ -160,6 +160,36 @@ describe("controller: algorithm and heuristic radio buttons", () => {
   );
 });
 
+describe("controller: heuristic panel visibility", () => {
+  const heuristicSelector = () => document.getElementById("heuristic-selector");
+
+  test("is hidden by default, since BFS is selected on load and doesn't use a heuristic", async () => {
+    await loadController();
+    expect(heuristicSelector().hidden).toBe(true);
+  });
+
+  test.each(["AStar", "BestFirst"])(
+    "selecting %s shows the heuristic panel",
+    async (algorithmValue) => {
+      await loadController();
+      selectRadio("algorithm", algorithmValue);
+      expect(heuristicSelector().hidden).toBe(false);
+    },
+  );
+
+  test.each(["NaiveDFS", "BFS", "Dijkstra"])(
+    "selecting %s hides the heuristic panel, even after it was shown",
+    async (algorithmValue) => {
+      await loadController();
+      selectRadio("algorithm", "AStar");
+      expect(heuristicSelector().hidden).toBe(false);
+
+      selectRadio("algorithm", algorithmValue);
+      expect(heuristicSelector().hidden).toBe(true);
+    },
+  );
+});
+
 describe("controller: board/run settings", () => {
   // Default board is 30x20 with Start at (0,0) and End at (19,29), so the
   // shortest-hop-count BFS path length is a fixed, exact number: the

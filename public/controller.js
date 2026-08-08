@@ -87,8 +87,8 @@ const cellEls = buildBoardDom(boardEl);
 const analysisCellEls = buildBoardDom(analysisBoardEl);
 boardEl.classList.add("cursor-pointer");
 
-document.getElementById("dims-readout").textContent = `${COLS} × ${ROWS}`;
-document.getElementById("analysis-dims-readout").textContent = `${COLS} × ${ROWS}`;
+// document.getElementById("dims-readout").textContent = `${COLS} × ${ROWS}`;
+// document.getElementById("analysis-dims-readout").textContent = `${COLS} × ${ROWS}`;
 
 function renderCell(id) {
   cellEls[id].className = "h-5 w-5 " + CELL_STATE_CLASS[graph.getState(id)];
