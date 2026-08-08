@@ -220,28 +220,32 @@ const resetButton = document.getElementById("reset-button");
 const saveButton = document.getElementById("save-button");
 const resultNote = document.getElementById("result-note");
 
-// Locks every mutation control (tools, algorithm/heuristic, diagonal
-// settings, speed) for as long as a run session is active - from the first
-// Step/Run of a search until it completes or Reset is clicked. Deliberately
-// independent of isRunning: a paused or manually-stepped-through search is
-// still an active session and must stay locked.
+// Locks every mutation control except playback speed (tools, algorithm/
+// heuristic, diagonal settings) for as long as a run session is active -
+// from the first Step/Run of a search until it completes or Reset is
+// clicked. Deliberately independent of isRunning: a paused or
+// manually-stepped-through search is still an active session and must stay
+// locked. Speed is handled separately in setRunToggleAvailability, since
+// it's safe to edit any time the auto-play interval isn't actively ticking.
 function setControlsEnabled(sessionActive) {
   algorithmInputs.forEach((i) => (i.disabled = sessionActive));
   heuristicInputs.forEach((i) => (i.disabled = sessionActive));
   toolInputs.forEach((i) => (i.disabled = sessionActive));
   document.getElementById("diagonal-toggle").disabled = sessionActive;
   document.getElementById("diagonal-weight-toggle").disabled = sessionActive;
-  document.getElementById("speed-slider").disabled = sessionActive;
   saveButton.disabled = sessionActive || !lastRunStats;
 }
 
-// Step/Reset only need to be unavailable while the auto-play interval is
-// actively ticking (isRunning) - otherwise identical whether a session is
-// idle, complete, or merely paused.
+// Step/Reset are unavailable while the auto-play interval is actively
+// ticking (isRunning) - otherwise identical whether a session is idle,
+// complete, or merely paused. Speed is only unsafe to edit while that same
+// interval is ticking (its delay is read once, when setInterval is
+// scheduled), so it tracks isRunning directly rather than session state.
 function setRunToggleAvailability(running) {
   isRunning = running;
   stepButton.disabled = running;
   resetButton.disabled = running;
+  document.getElementById("speed-slider").disabled = running;
 }
 
 function resetStats() {

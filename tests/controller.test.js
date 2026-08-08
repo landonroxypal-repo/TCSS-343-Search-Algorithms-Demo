@@ -319,26 +319,26 @@ describe("controller: saved-analysis statistics panel", () => {
 });
 
 describe("controller: mutation controls lock during an active run session", () => {
-  // Every input a user could use to change the board/algorithm setup mid-run
-  // - not the Save button, which has its own independent enabled condition
-  // (a completed run must exist), so it's checked separately.
-  function mutationControlEls() {
+  // Every input a user could use to change the board/algorithm setup mid-run,
+  // except the speed slider (locked independently of session state - see the
+  // "playback speed stays editable while paused" block below) and Save
+  // (its own independent enabled condition), so both are checked separately.
+  function lockedControlEls() {
     return [
       ...document.querySelectorAll('input[name="algorithm"]'),
       ...document.querySelectorAll('input[name="heuristic"]'),
       ...document.querySelectorAll('input[name="tool"]'),
       document.getElementById("diagonal-toggle"),
       document.getElementById("diagonal-weight-toggle"),
-      document.getElementById("speed-slider"),
     ];
   }
 
   function allDisabled() {
-    return mutationControlEls().every((el) => el.disabled);
+    return lockedControlEls().every((el) => el.disabled);
   }
 
   function allEnabled() {
-    return mutationControlEls().every((el) => !el.disabled);
+    return lockedControlEls().every((el) => !el.disabled);
   }
 
   test("starting a run session (Step) disables every mutation control, and Reset re-enables them", async () => {
@@ -367,5 +367,45 @@ describe("controller: mutation controls lock during an active run session", () =
 
     expect(allEnabled()).toBe(true);
     expect(document.getElementById("save-button").disabled).toBe(false);
+  });
+});
+
+describe("controller: playback speed stays editable while paused", () => {
+  // The interval delay is only ever read once, at the moment setInterval is
+  // scheduled, so speed only actually needs to be locked while that interval
+  // is ticking - there's no live-reconfiguration to protect against once
+  // it's stopped, whether that's from an explicit Pause or just sitting
+  // between manual Steps.
+  test("the speed slider is disabled only while actively auto-running, not while paused or idle", async () => {
+    await loadController();
+    const speedSlider = document.getElementById("speed-slider");
+    const runButton = document.getElementById("run-button");
+
+    expect(speedSlider.disabled).toBe(false);
+
+    runButton.click(); // start
+    expect(speedSlider.disabled).toBe(true);
+
+    runButton.click(); // pause
+    expect(speedSlider.disabled).toBe(false);
+  });
+
+  test("while paused, the speed slider is editable but every other mutation control stays locked", async () => {
+    await loadController();
+    const runButton = document.getElementById("run-button");
+
+    runButton.click();
+    runButton.click();
+
+    expect(document.getElementById("speed-slider").disabled).toBe(false);
+
+    const otherControls = [
+      ...document.querySelectorAll('input[name="algorithm"]'),
+      ...document.querySelectorAll('input[name="heuristic"]'),
+      ...document.querySelectorAll('input[name="tool"]'),
+      document.getElementById("diagonal-toggle"),
+      document.getElementById("diagonal-weight-toggle"),
+    ];
+    expect(otherControls.every((el) => el.disabled)).toBe(true);
   });
 });
