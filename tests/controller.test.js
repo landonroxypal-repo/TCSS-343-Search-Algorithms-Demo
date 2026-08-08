@@ -264,3 +264,56 @@ describe("controller: Run / Step / Reset / Save buttons", () => {
     expect(document.querySelectorAll("#analysis-list li")).toHaveLength(1);
   });
 });
+
+describe("controller: saved-analysis statistics panel", () => {
+  function selectSavedAnalysis(index) {
+    document
+      .querySelectorAll("#analysis-list li")
+      [index].querySelector("button")
+      .click();
+  }
+
+  function readLiveStats() {
+    return {
+      pathLength: document.getElementById("stat-path-length").textContent,
+      operations: document.getElementById("stat-operations").textContent,
+      expanded: document.getElementById("stat-expanded").textContent,
+      elapsed: document.getElementById("stat-elapsed").textContent,
+    };
+  }
+
+  function readAnalysisStats() {
+    return {
+      pathLength: document.getElementById("analysis-stat-path-length").textContent,
+      operations: document.getElementById("analysis-stat-operations").textContent,
+      expanded: document.getElementById("analysis-stat-expanded").textContent,
+      elapsed: document.getElementById("analysis-stat-elapsed").textContent,
+    };
+  }
+
+  test("selecting a saved analysis updates the statistics panel to match that run, not whatever was already shown", async () => {
+    await loadController();
+
+    // Run 1: default board (diagonals on) with BFS.
+    runToCompletion();
+    const run1LiveStats = readLiveStats();
+    document.getElementById("save-button").click();
+
+    // Run 2: diagonals off forces a longer path, so its stats are
+    // guaranteed to differ from run 1's - proof the panel is actually
+    // switching per-selection rather than being frozen from the first save.
+    document.getElementById("reset-button").click();
+    document.getElementById("diagonal-toggle").click();
+    runToCompletion();
+    const run2LiveStats = readLiveStats();
+    document.getElementById("save-button").click();
+
+    expect(run2LiveStats.pathLength).not.toBe(run1LiveStats.pathLength);
+
+    selectSavedAnalysis(0);
+    expect(readAnalysisStats()).toEqual(run1LiveStats);
+
+    selectSavedAnalysis(1);
+    expect(readAnalysisStats()).toEqual(run2LiveStats);
+  });
+});
