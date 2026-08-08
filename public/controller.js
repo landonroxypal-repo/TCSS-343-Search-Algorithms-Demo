@@ -4,6 +4,7 @@ import { Algorithm } from "../src/datamodel/Algorithm.js";
 import { Heuristic } from "../src/datamodel/Heuristic.js";
 import { SearchStatus } from "../src/datamodel/SearchStatus.js";
 import { Statistics } from "../src/datamodel/Statistics.js";
+import { AlgorithmSelection } from "../src/datamodel/AlgorithmSelection.js";
 import { Analysis } from "../src/Analysis.js";
 import { NaiveDFS } from "../src/algorithms/NaiveDFS.js";
 import { BFS } from "../src/algorithms/BFS.js";
@@ -51,8 +52,7 @@ const graph = new Graph(COLS, ROWS);
 seedDefaultStartEnd(graph);
 
 let tool = "wall";
-let selectedAlgorithm = Algorithm.BFS;
-let selectedHeuristic = Heuristic.Manhattan;
+let selection = new AlgorithmSelection(Algorithm.BFS, Heuristic.Manhattan);
 let algorithm = null;
 let isRunning = false;
 let isPointerDown = false;
@@ -61,8 +61,7 @@ let operationsCount = 0;
 let expandedCount = 0;
 let elapsedMs = 0;
 let lastRunStats = null;
-let lastRunAlgorithm = null;
-let lastRunHeuristic = null;
+let lastRunSelection = null;
 let savedAnalyses = [];
 let selectedAnalysisIndex = -1;
 
@@ -182,12 +181,12 @@ function usesHeuristic(alg) {
 }
 
 function syncHeuristicVisibility() {
-  heuristicSelector.hidden = !usesHeuristic(selectedAlgorithm);
+  heuristicSelector.hidden = !usesHeuristic(selection.getAlgorithm());
 }
 
 algorithmInputs.forEach((input) => {
   input.addEventListener("change", (e) => {
-    selectedAlgorithm = e.target.value;
+    selection = new AlgorithmSelection(e.target.value, selection.getHeuristic());
     syncHeuristicVisibility();
   });
 });
@@ -195,7 +194,7 @@ syncHeuristicVisibility();
 
 heuristicInputs.forEach((input) => {
   input.addEventListener("change", (e) => {
-    selectedHeuristic = e.target.value;
+    selection = new AlgorithmSelection(selection.getAlgorithm(), e.target.value);
   });
 });
 
@@ -276,10 +275,10 @@ function clearRunVisuals() {
 }
 
 function createAlgorithm() {
-  const AlgorithmClass = ALGORITHM_CLASSES[selectedAlgorithm];
+  const AlgorithmClass = ALGORITHM_CLASSES[selection.getAlgorithm()];
   const instance = new AlgorithmClass();
-  if (usesHeuristic(selectedAlgorithm)) {
-    instance.setHeuristic(selectedHeuristic);
+  if (usesHeuristic(selection.getAlgorithm())) {
+    instance.setHeuristic(selection.getHeuristic());
   }
 
   instance.onNodeVisited.push((id) => {
@@ -311,8 +310,10 @@ function ensureAlgorithm() {
   if (!algorithm) {
     clearRunVisuals();
     resetStats();
-    lastRunAlgorithm = selectedAlgorithm;
-    lastRunHeuristic = usesHeuristic(selectedAlgorithm) ? selectedHeuristic : Heuristic.None;
+    lastRunSelection = new AlgorithmSelection(
+      selection.getAlgorithm(),
+      usesHeuristic(selection.getAlgorithm()) ? selection.getHeuristic() : Heuristic.None,
+    );
     algorithm = createAlgorithm();
     algorithm.initialize(graph);
     setControlsEnabled(true);
@@ -521,8 +522,7 @@ function selectAnalysis(index) {
 saveButton.addEventListener("click", () => {
   if (!lastRunStats) return;
   const analysis = new Analysis(
-    lastRunAlgorithm,
-    lastRunHeuristic,
+    lastRunSelection,
     graph,
     lastRunStats,
     formatTime(new Date()),

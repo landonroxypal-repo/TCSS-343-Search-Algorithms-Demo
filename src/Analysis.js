@@ -10,20 +10,19 @@ function copyStatistics(stats) {
 }
 
 export class Analysis {
-  constructor(algorithm, heuristic, graph, stats, time) {
-    this.algorithm = algorithm;
-    this.heuristic = heuristic;
+  constructor(selection, graph, stats, time) {
+    this.selection = selection.copy();
     this.graph = graph.copy();
     this.stats = copyStatistics(stats);
     this.time = time;
   }
 
   getAlgorithm() {
-    return this.algorithm;
+    return this.selection.getAlgorithm();
   }
 
   getHeuristic() {
-    return this.heuristic;
+    return this.selection.getHeuristic();
   }
 
   getGraph() {

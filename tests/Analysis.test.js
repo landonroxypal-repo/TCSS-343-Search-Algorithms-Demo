@@ -1,15 +1,17 @@
 import { Analysis } from "../src/Analysis.js";
 import { Graph } from "../src/datamodel/Graph.js";
 import { Statistics } from "../src/datamodel/Statistics.js";
+import { AlgorithmSelection } from "../src/datamodel/AlgorithmSelection.js";
 import { Algorithm } from "../src/datamodel/Algorithm.js";
 import { Heuristic } from "../src/datamodel/Heuristic.js";
 import { VertexState } from "../src/datamodel/VertexState.js";
 
 function buildAnalysis(algorithm, heuristic, time = "2:05 PM") {
+  const selection = new AlgorithmSelection(algorithm, heuristic);
   const graph = new Graph(5, 5);
   const stats = new Statistics(0, 0, 0, 0);
-  const analysis = new Analysis(algorithm, heuristic, graph, stats, time);
-  return { analysis, graph, stats, time };
+  const analysis = new Analysis(selection, graph, stats, time);
+  return { analysis, selection, graph, stats, time };
 }
 
 describe("Analysis", () => {
@@ -44,8 +46,7 @@ describe("Analysis", () => {
       graph.setState(graph.toId(2, 2), VertexState.End);
       graph.setState(graph.toId(1, 1), VertexState.Wall);
       const analysis = new Analysis(
-        Algorithm.BFS,
-        Heuristic.None,
+        new AlgorithmSelection(Algorithm.BFS, Heuristic.None),
         graph,
         new Statistics(0, 0, 0, 0),
         "2:05 PM",
