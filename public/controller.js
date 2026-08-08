@@ -221,16 +221,28 @@ const resetButton = document.getElementById("reset-button");
 const saveButton = document.getElementById("save-button");
 const resultNote = document.getElementById("result-note");
 
-function setControlsEnabled(runningNow) {
-  isRunning = runningNow;
-  stepButton.disabled = runningNow;
-  resetButton.disabled = runningNow;
-  saveButton.disabled = runningNow || !lastRunStats;
-  algorithmInputs.forEach((i) => (i.disabled = runningNow));
-  heuristicInputs.forEach((i) => (i.disabled = runningNow));
-  toolInputs.forEach((i) => (i.disabled = runningNow));
-  document.getElementById("diagonal-toggle").disabled = runningNow;
-  document.getElementById("diagonal-weight-toggle").disabled = runningNow;
+// Locks every mutation control (tools, algorithm/heuristic, diagonal
+// settings, speed) for as long as a run session is active - from the first
+// Step/Run of a search until it completes or Reset is clicked. Deliberately
+// independent of isRunning: a paused or manually-stepped-through search is
+// still an active session and must stay locked.
+function setControlsEnabled(sessionActive) {
+  algorithmInputs.forEach((i) => (i.disabled = sessionActive));
+  heuristicInputs.forEach((i) => (i.disabled = sessionActive));
+  toolInputs.forEach((i) => (i.disabled = sessionActive));
+  document.getElementById("diagonal-toggle").disabled = sessionActive;
+  document.getElementById("diagonal-weight-toggle").disabled = sessionActive;
+  document.getElementById("speed-slider").disabled = sessionActive;
+  saveButton.disabled = sessionActive || !lastRunStats;
+}
+
+// Step/Reset only need to be unavailable while the auto-play interval is
+// actively ticking (isRunning) - otherwise identical whether a session is
+// idle, complete, or merely paused.
+function setRunToggleAvailability(running) {
+  isRunning = running;
+  stepButton.disabled = running;
+  resetButton.disabled = running;
 }
 
 function resetStats() {
@@ -298,6 +310,7 @@ function ensureAlgorithm() {
     resetStats();
     algorithm = createAlgorithm();
     algorithm.initialize(graph);
+    setControlsEnabled(true);
   }
 }
 
@@ -348,6 +361,7 @@ function finishRun() {
 
   algorithm = null;
   setControlsEnabled(false);
+  setRunToggleAvailability(false);
   runButton.textContent = "Run";
 }
 
@@ -366,19 +380,18 @@ function stepOnce() {
 
 stepButton.addEventListener("click", () => {
   if (isRunning) return;
-  setControlsEnabled(true);
-  const done = stepOnce();
-  if (!done) setControlsEnabled(false);
+  stepOnce();
 });
 
 runButton.addEventListener("click", () => {
   if (isRunning) {
     clearInterval(runTimer);
-    setControlsEnabled(false);
+    setRunToggleAvailability(false);
     runButton.textContent = "Run";
     return;
   }
-  setControlsEnabled(true);
+  ensureAlgorithm();
+  setRunToggleAvailability(true);
   runButton.textContent = "Pause";
   runTimer = setInterval(() => {
     const done = stepOnce();
@@ -392,6 +405,7 @@ resetButton.addEventListener("click", () => {
   algorithm = null;
   clearRunVisuals();
   resetStats();
+  setControlsEnabled(false);
   runButton.textContent = "Run";
 });
 
