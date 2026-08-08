@@ -253,8 +253,8 @@ function resetStats() {
   expandedCount = 0;
   elapsedMs = 0;
   lastRunStats = null;
-  document.getElementById("stat-operations").textContent = "0";
-  document.getElementById("stat-expanded").textContent = "0";
+  document.getElementById("stat-operations").textContent = "N/A";
+  document.getElementById("stat-expanded").textContent = "N/A";
   document.getElementById("stat-path-length").textContent = "N/A";
   document.getElementById("stat-elapsed").textContent = "N/A";
   resultNote.textContent = "";

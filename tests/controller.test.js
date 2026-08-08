@@ -226,7 +226,7 @@ describe("controller: Run / Step / Reset / Save buttons", () => {
     const stepButton = document.getElementById("step-button");
     const opsEl = document.getElementById("stat-operations");
 
-    expect(opsEl.textContent).toBe("0");
+    expect(opsEl.textContent).toBe("N/A");
 
     stepButton.click();
     const afterOneClick = Number(opsEl.textContent);
@@ -273,7 +273,7 @@ describe("controller: Run / Step / Reset / Save buttons", () => {
 
     resetButton.click();
 
-    expect(document.getElementById("stat-operations").textContent).toBe("0");
+    expect(document.getElementById("stat-operations").textContent).toBe("N/A");
     expect(document.getElementById("stat-path-length").textContent).toBe("N/A");
     expect(document.getElementById("save-button").disabled).toBe(true);
     expect(
@@ -562,4 +562,55 @@ describe("controller: saved-analysis grid cell coloring matches its legend", () 
       expect(cells.some((cell) => cellBgClass(cell) === expectedBg)).toBe(true);
     },
   );
+});
+
+describe("controller: all statistics labels show N/A when reset", () => {
+  test("clicking Reset sets every live statistic label back to N/A", async () => {
+    await loadController();
+    const stepButton = document.getElementById("step-button");
+
+    stepButton.click();
+    stepButton.click();
+    expect(Number(document.getElementById("stat-operations").textContent)).toBeGreaterThan(0);
+
+    document.getElementById("reset-button").click();
+
+    expect(document.getElementById("stat-path-length").textContent).toBe("N/A");
+    expect(document.getElementById("stat-operations").textContent).toBe("N/A");
+    expect(document.getElementById("stat-expanded").textContent).toBe("N/A");
+    expect(document.getElementById("stat-elapsed").textContent).toBe("N/A");
+  });
+
+  test("removing the selected saved analysis sets every grid-view statistic label back to N/A", async () => {
+    await loadController();
+    runToCompletion();
+    document.getElementById("save-button").click(); // auto-selects the new analysis
+
+    expect(document.getElementById("analysis-stat-operations").textContent).not.toBe("N/A");
+
+    document.querySelector("#analysis-list li button[aria-label='Remove saved analysis']").click();
+
+    expect(document.getElementById("analysis-stat-path-length").textContent).toBe("N/A");
+    expect(document.getElementById("analysis-stat-operations").textContent).toBe("N/A");
+    expect(document.getElementById("analysis-stat-expanded").textContent).toBe("N/A");
+    expect(document.getElementById("analysis-stat-elapsed").textContent).toBe("N/A");
+  });
+
+  test("on initial page load, every live statistic label already shows N/A", async () => {
+    await loadController();
+
+    expect(document.getElementById("stat-path-length").textContent).toBe("N/A");
+    expect(document.getElementById("stat-operations").textContent).toBe("N/A");
+    expect(document.getElementById("stat-expanded").textContent).toBe("N/A");
+    expect(document.getElementById("stat-elapsed").textContent).toBe("N/A");
+  });
+
+  test("on initial page load, every grid-view statistic label already shows N/A", async () => {
+    await loadController();
+
+    expect(document.getElementById("analysis-stat-path-length").textContent).toBe("N/A");
+    expect(document.getElementById("analysis-stat-operations").textContent).toBe("N/A");
+    expect(document.getElementById("analysis-stat-expanded").textContent).toBe("N/A");
+    expect(document.getElementById("analysis-stat-elapsed").textContent).toBe("N/A");
+  });
 });
