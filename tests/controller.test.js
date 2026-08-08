@@ -837,3 +837,42 @@ describe("controller: Clear board button", () => {
     runButton.click(); // stop the interval before the test ends
   });
 });
+
+describe("controller: hover readout", () => {
+  const hoverReadout = () => document.getElementById("hover-readout");
+
+  test("shows a default prompt before any cell has been hovered", async () => {
+    await loadController();
+    expect(hoverReadout().textContent).toBe("Hover over a cell to see its position and state.");
+  });
+
+  test("hovering an Idle cell reports its row, column, id, and state", async () => {
+    await loadController();
+    dragOverCell(100); // (row 3, col 10) - hover only, no pointerdown
+
+    expect(hoverReadout().textContent).toBe("(3, 10) → id 100 · Idle");
+  });
+
+  test("hovering the Start cell reports its Start state", async () => {
+    await loadController();
+    dragOverCell(0); // (row 0, col 0)
+
+    expect(hoverReadout().textContent).toBe("(0, 0) → id 0 · Start");
+  });
+
+  test("hovering a painted Wall cell reports its Wall state", async () => {
+    await loadController();
+    paintCell(100);
+    dragOverCell(100);
+
+    expect(hoverReadout().textContent).toBe("(3, 10) → id 100 · Wall");
+  });
+
+  test("hovering a new cell replaces the previous readout rather than appending to it", async () => {
+    await loadController();
+    dragOverCell(100);
+    dragOverCell(200); // (row 6, col 20)
+
+    expect(hoverReadout().textContent).toBe("(6, 20) → id 200 · Idle");
+  });
+});
