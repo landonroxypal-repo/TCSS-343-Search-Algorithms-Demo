@@ -1095,3 +1095,37 @@ describe("controller: selecting a saved analysis", () => {
     expect(document.getElementById("analysis-source").textContent).toBe("No analysis selected");
   });
 });
+
+describe("controller: tool-selector radio buttons", () => {
+  const IDLE_CELL_ID = 100; // (row 3, col 10)
+
+  // Clicking a radio that's already checked doesn't fire "change" in the
+  // first place, so each case starts from a different tool to force a
+  // genuine change event - proving the switch itself, not just the default.
+  test.each([
+    ["wall", "Wall"],
+    ["start", "Start"],
+    ["end", "End"],
+  ])("selecting the %s tool switches painting to %s", async (toolValue, expectedState) => {
+    await loadController();
+    selectRadio("tool", "erase");
+    selectRadio("tool", toolValue);
+
+    paintCell(IDLE_CELL_ID);
+
+    expect(cellState(IDLE_CELL_ID)).toBe(expectedState);
+  });
+
+  test("selecting the erase tool switches painting to erase", async () => {
+    await loadController();
+    // Painted with the default tool (no radio switch needed yet), so this
+    // doesn't depend on any other tool radio's wiring being correct.
+    paintCell(IDLE_CELL_ID);
+    expect(cellState(IDLE_CELL_ID)).toBe("Wall");
+
+    selectRadio("tool", "erase");
+    paintCell(IDLE_CELL_ID);
+
+    expect(cellState(IDLE_CELL_ID)).toBe("Idle");
+  });
+});
