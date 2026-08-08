@@ -409,3 +409,40 @@ describe("controller: playback speed stays editable while paused", () => {
     expect(otherControls.every((el) => el.disabled)).toBe(true);
   });
 });
+
+describe("controller: result-note reports whether a path was found", () => {
+  // Board painting is wired to "pointerdown", not "click" - a plain Event
+  // with the right type is enough since the handler only reads e.target.
+  function paintWall(id) {
+    document
+      .querySelectorAll("#board > div")
+      [id].dispatchEvent(new Event("pointerdown", { bubbles: true }));
+  }
+
+  test("reports the path length in steps when End is reachable", async () => {
+    await loadController();
+    runToCompletion();
+
+    expect(document.getElementById("result-note").textContent).toBe(
+      "Path found! 29 steps.",
+    );
+  });
+
+  test("reports that End is unreachable when no path exists", async () => {
+    await loadController();
+
+    // A solid wall column fully separates Start (col 0) from End (col 29):
+    // no orthogonal or diagonal move changes column by more than 1, so a
+    // full-height wall column blocks every possible route regardless of
+    // whether diagonal movement is enabled.
+    for (let row = 0; row < 20; row++) {
+      paintWall(row * 30 + 15);
+    }
+
+    runToCompletion();
+
+    expect(document.getElementById("result-note").textContent).toBe(
+      "End is unreachable from Start.",
+    );
+  });
+});
