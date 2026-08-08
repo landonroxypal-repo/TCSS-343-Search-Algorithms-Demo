@@ -20,5 +20,8 @@
   },
   "allowScripts": {
     "unrs-resolver@1.12.2": true
+  },
+  "devDependencies": {
+    "jest-environment-jsdom": "^30.4.1"
   }
 }

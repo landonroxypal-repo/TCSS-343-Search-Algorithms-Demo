@@ -61,6 +61,8 @@ let operationsCount = 0;
 let expandedCount = 0;
 let elapsedMs = 0;
 let lastRunStats = null;
+let lastRunAlgorithm = null;
+let lastRunHeuristic = null;
 let savedAnalyses = [];
 let selectedAnalysisIndex = -1;
 
@@ -305,6 +307,8 @@ function ensureAlgorithm() {
   if (!algorithm) {
     clearRunVisuals();
     resetStats();
+    lastRunAlgorithm = selectedAlgorithm;
+    lastRunHeuristic = usesHeuristic(selectedAlgorithm) ? selectedHeuristic : Heuristic.None;
     algorithm = createAlgorithm();
     algorithm.initialize(graph);
     setControlsEnabled(true);
@@ -512,10 +516,9 @@ function selectAnalysis(index) {
 
 saveButton.addEventListener("click", () => {
   if (!lastRunStats) return;
-  const heuristicValue = usesHeuristic(selectedAlgorithm) ? selectedHeuristic : Heuristic.None;
   const analysis = new Analysis(
-    selectedAlgorithm,
-    heuristicValue,
+    lastRunAlgorithm,
+    lastRunHeuristic,
     graph,
     lastRunStats,
     formatTime(new Date()),
