@@ -906,3 +906,15 @@ describe("controller: hover readout", () => {
     expect(hoverReadout().textContent).toBe("(6, 20) → id 200 · Idle");
   });
 });
+
+describe("controller: dims readout", () => {
+  test("the board dims readout shows the board's columns × rows", async () => {
+    await loadController();
+    expect(document.getElementById("dims-readout").textContent).toBe("30 × 20");
+  });
+
+  test("the saved-analysis board dims readout shows the same columns × rows", async () => {
+    await loadController();
+    expect(document.getElementById("analysis-dims-readout").textContent).toBe("30 × 20");
+  });
+});
