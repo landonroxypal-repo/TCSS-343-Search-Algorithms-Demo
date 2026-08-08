@@ -5,11 +5,11 @@ import { Algorithm } from "../src/datamodel/Algorithm.js";
 import { Heuristic } from "../src/datamodel/Heuristic.js";
 import { VertexState } from "../src/datamodel/VertexState.js";
 
-function buildAnalysis(algorithm, heuristic) {
+function buildAnalysis(algorithm, heuristic, time = "2:05 PM") {
   const graph = new Graph(5, 5);
   const stats = new Statistics(0, 0, 0, 0);
-  const analysis = new Analysis(algorithm, heuristic, graph, stats);
-  return { analysis, graph, stats };
+  const analysis = new Analysis(algorithm, heuristic, graph, stats, time);
+  return { analysis, graph, stats, time };
 }
 
 describe("Analysis", () => {
@@ -21,6 +21,15 @@ describe("Analysis", () => {
   test("exposes the heuristic it was configured with", () => {
     const { analysis } = buildAnalysis(Algorithm.AStar, Heuristic.Manhattan);
     expect(analysis.getHeuristic()).toBe(Heuristic.Manhattan);
+  });
+
+  test("exposes the time it was configured with", () => {
+    const { analysis } = buildAnalysis(
+      Algorithm.BFS,
+      Heuristic.None,
+      "11:47 PM",
+    );
+    expect(analysis.getTime()).toBe("11:47 PM");
   });
 
   describe("Graph copy", () => {
@@ -39,6 +48,7 @@ describe("Analysis", () => {
         Heuristic.None,
         graph,
         new Statistics(0, 0, 0, 0),
+        "2:05 PM",
       );
 
       const copy = analysis.getGraph();

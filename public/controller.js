@@ -1,3 +1,6 @@
+// Add time to analysis, look at path being able to be painted over, and reset logic with buttons too, and ability to remove analyses
+// Then refactor!!!
+
 import { Graph } from "../src/datamodel/Graph.js";
 import { VertexState } from "../src/datamodel/VertexState.js";
 import { Algorithm } from "../src/datamodel/Algorithm.js";
@@ -398,10 +401,18 @@ const analysisListEl = document.getElementById("analysis-list");
 const analysisEmptyStateEl = document.getElementById("analysis-empty-state");
 const analysisSourceEl = document.getElementById("analysis-source");
 
+function formatTime(date) {
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 function analysisLabel(analysis) {
   const heuristic = analysis.getHeuristic();
   const suffix = heuristic !== Heuristic.None ? ` · ${heuristic}` : "";
-  return ALGORITHM_LABELS[analysis.getAlgorithm()] + suffix;
+  return `${ALGORITHM_LABELS[analysis.getAlgorithm()]}${suffix} · ${analysis.getTime()}`;
 }
 
 function renderAnalysisList() {
@@ -454,7 +465,13 @@ function selectAnalysis(index) {
 saveButton.addEventListener("click", () => {
   if (!lastRunStats) return;
   const heuristicValue = usesHeuristic(selectedAlgorithm) ? selectedHeuristic : Heuristic.None;
-  const analysis = new Analysis(selectedAlgorithm, heuristicValue, graph, lastRunStats);
+  const analysis = new Analysis(
+    selectedAlgorithm,
+    heuristicValue,
+    graph,
+    lastRunStats,
+    formatTime(new Date()),
+  );
   savedAnalyses.push(analysis);
   renderAnalysisList();
   selectAnalysis(savedAnalyses.length - 1);
