@@ -317,3 +317,55 @@ describe("controller: saved-analysis statistics panel", () => {
     expect(readAnalysisStats()).toEqual(run2LiveStats);
   });
 });
+
+describe("controller: mutation controls lock during an active run session", () => {
+  // Every input a user could use to change the board/algorithm setup mid-run
+  // - not the Save button, which has its own independent enabled condition
+  // (a completed run must exist), so it's checked separately.
+  function mutationControlEls() {
+    return [
+      ...document.querySelectorAll('input[name="algorithm"]'),
+      ...document.querySelectorAll('input[name="heuristic"]'),
+      ...document.querySelectorAll('input[name="tool"]'),
+      document.getElementById("diagonal-toggle"),
+      document.getElementById("diagonal-weight-toggle"),
+      document.getElementById("speed-slider"),
+    ];
+  }
+
+  function allDisabled() {
+    return mutationControlEls().every((el) => el.disabled);
+  }
+
+  function allEnabled() {
+    return mutationControlEls().every((el) => !el.disabled);
+  }
+
+  test("starting a run session (Step) disables every mutation control, and Reset re-enables them", async () => {
+    await loadController();
+    expect(allEnabled()).toBe(true);
+
+    document.getElementById("step-button").click();
+    expect(allDisabled()).toBe(true);
+
+    document.getElementById("reset-button").click();
+    expect(allEnabled()).toBe(true);
+  });
+
+  test("controls stay locked while paused mid-run, not just while actively auto-stepping", async () => {
+    await loadController();
+
+    document.getElementById("run-button").click();
+    document.getElementById("run-button").click();
+
+    expect(allDisabled()).toBe(true);
+  });
+
+  test("finishing a run re-enables the controls and makes Save available", async () => {
+    await loadController();
+    runToCompletion();
+
+    expect(allEnabled()).toBe(true);
+    expect(document.getElementById("save-button").disabled).toBe(false);
+  });
+});
