@@ -205,13 +205,15 @@ export function describeSearchAlgorithmContract(AlgorithmClass) {
     test("never visits vertices on the far side of a Wall", () => {
       const algorithm = new AlgorithmClass();
       const graph = buildWalledCorridor();
-      algorithm.initialize(graph);
 
+      // Registered before initialize() - initialize() itself visits Start,
+      // and a listener attached afterward would silently miss that call.
       const visitedIds = [];
       algorithm.onNodeVisited.push((id) => visitedIds.push(id));
+      algorithm.initialize(graph);
       runToCompletion(algorithm);
 
-      expect(visitedIds).not.toContain(graph.toId(0, 2));
+      expect(visitedIds).toEqual([graph.getStartId()]);
     });
 
     test("recovers a path from Start to End on a larger grid when one exists", () => {

@@ -1,6 +1,3 @@
-// Look at path being able to be painted over, and reset logic with buttons too, and ability to remove analyses
-// Then refactor!!!
-
 import { Graph } from "../src/datamodel/Graph.js";
 import { VertexState } from "../src/datamodel/VertexState.js";
 import { Algorithm } from "../src/datamodel/Algorithm.js";
