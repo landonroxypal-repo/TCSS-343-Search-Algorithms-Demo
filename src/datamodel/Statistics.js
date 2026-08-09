@@ -21,4 +21,13 @@ export class Statistics {
   getElapsedTime() {
     return this.elapsedTime;
   }
+
+  copy() {
+    return new Statistics(
+      this.pathLength,
+      this.operationCount,
+      this.expandedNodes,
+      this.elapsedTime,
+    );
+  }
 }

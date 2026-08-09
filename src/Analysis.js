@@ -1,19 +1,8 @@
-import { Statistics } from "./datamodel/Statistics.js";
-
-function copyStatistics(stats) {
-  return new Statistics(
-    stats.getPathLength(),
-    stats.getOperationCount(),
-    stats.getExpandedNodes(),
-    stats.getElapsedTime(),
-  );
-}
-
 export class Analysis {
   constructor(selection, graph, stats, time) {
     this.selection = selection.copy();
     this.graph = graph.copy();
-    this.stats = copyStatistics(stats);
+    this.stats = stats.copy();
     this.time = time;
   }
 
