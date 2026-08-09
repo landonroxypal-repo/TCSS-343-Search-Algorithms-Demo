@@ -1,4 +1,4 @@
-import { PriorityQueue } from "../../src/algorithms/PriorityQueue.js";
+import { PriorityQueue } from "../../src/data-structures/PriorityQueue.js";
 
 describe("PriorityQueue", () => {
   test("is empty when freshly constructed", () => {

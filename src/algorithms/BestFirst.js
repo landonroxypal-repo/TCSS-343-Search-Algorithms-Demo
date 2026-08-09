@@ -1,7 +1,7 @@
 import { SearchAlgorithm } from "./SearchAlgorithm.js";
 import { SearchStatus } from "../datamodel/SearchStatus.js";
 import { VertexInfo } from "../datamodel/VertexInfo.js";
-import { PriorityQueue } from "./PriorityQueue.js";
+import { PriorityQueue } from "../data-structures/PriorityQueue.js";
 import { HeuristicCalculator } from "./HeuristicCalculator.js";
 
 export class BestFirst extends SearchAlgorithm {

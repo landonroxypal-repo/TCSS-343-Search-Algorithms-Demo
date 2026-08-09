@@ -1,6 +1,6 @@
 import { SearchAlgorithm } from "./SearchAlgorithm.js";
 import { SearchStatus } from "../datamodel/SearchStatus.js";
-import { PriorityQueue } from "./PriorityQueue.js";
+import { PriorityQueue } from "../data-structures/PriorityQueue.js";
 
 export class WeightedSearchAlgorithm extends SearchAlgorithm {
   constructor() {

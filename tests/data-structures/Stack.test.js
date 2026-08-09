@@ -1,4 +1,4 @@
-import { Stack } from "../../src/algorithms/Stack.js";
+import { Stack } from "../../src/data-structures/Stack.js";
 
 // Same enqueue/dequeue/isEmpty interface as PriorityQueue (Unify Interfaces
 // with Adapter), so callers can't tell them apart.

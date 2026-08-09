@@ -1,4 +1,4 @@
-import { Queue } from "../../src/algorithms/Queue.js";
+import { Queue } from "../../src/data-structures/Queue.js";
 
 // Same enqueue/dequeue/isEmpty interface as PriorityQueue (Unify Interfaces
 // with Adapter), so callers can't tell them apart.
