@@ -24,4 +24,13 @@ export class VertexInfo {
   setPreviousVertex(id) {
     this.previousVertex = id;
   }
+
+  relaxIfBetter(candidateDistance, previousVertexId) {
+    if (candidateDistance < this.currentPathLength) {
+      this.currentPathLength = candidateDistance;
+      this.previousVertex = previousVertexId;
+      return true;
+    }
+    return false;
+  }
 }

@@ -42,9 +42,9 @@ export class UnweightedSearchAlgorithm extends SearchAlgorithm {
 
     for (const neighborId of this.graph.getNeighbors(currentId)) {
       if (!this.visitedVertices.has(neighborId)) {
-        this.vertexInfo[neighborId].setPreviousVertex(currentId);
-        this.vertexInfo[neighborId].setCurrentPathLength(
+        this.vertexInfo[neighborId].relaxIfBetter(
           this.vertexInfo[currentId].getCurrentPathLength() + 1,
+          currentId,
         );
         this._visit(neighborId);
         this.dataStructure.push(neighborId);

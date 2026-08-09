@@ -54,9 +54,7 @@ export class WeightedSearchAlgorithm extends SearchAlgorithm {
       const candidateDistance =
         currentDistance + this.graph.getEdgeWeight(currentId, neighborId);
 
-      if (candidateDistance < this.vertexInfo[neighborId].getCurrentPathLength()) {
-        this.vertexInfo[neighborId].setCurrentPathLength(candidateDistance);
-        this.vertexInfo[neighborId].setPreviousVertex(currentId);
+      if (this.vertexInfo[neighborId].relaxIfBetter(candidateDistance, currentId)) {
         if (!this.visitedVertices.has(neighborId)) {
           this._visit(neighborId);
         }

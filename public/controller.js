@@ -108,35 +108,70 @@ toolInputs.forEach((input) => {
   });
 });
 
+// Each strategy mutates the graph for the given id and returns the list of
+// cell ids that changed (so applyTool knows what to re-render), or [] if the
+// tool declined to apply (e.g. painting a Wall over Start/End).
+const PAINT_TOOLS = {
+  wall: {
+    apply(graph, id) {
+      const state = graph.getState(id);
+      if (state === VertexState.Start || state === VertexState.End) {
+        return [];
+      }
+      graph.setState(id, VertexState.Wall);
+      return [id];
+    },
+  },
+  erase: {
+    apply(graph, id) {
+      const state = graph.getState(id);
+      if (state === VertexState.Start || state === VertexState.End) {
+        return [];
+      }
+      graph.setState(id, VertexState.Idle);
+      return [id];
+    },
+  },
+  start: {
+    apply(graph, id) {
+      const state = graph.getState(id);
+      if (state === VertexState.Wall || state === VertexState.End) {
+        return [];
+      }
+      const previousStart = graph.getStartId();
+      const changedIds = [id];
+      if (previousStart !== -1 && previousStart !== id) {
+        graph.setState(previousStart, VertexState.Idle);
+        changedIds.push(previousStart);
+      }
+      graph.setState(id, VertexState.Start);
+      return changedIds;
+    },
+  },
+  end: {
+    apply(graph, id) {
+      const state = graph.getState(id);
+      if (state === VertexState.Wall || state === VertexState.Start) {
+        return [];
+      }
+      const previousEnd = graph.getEndId();
+      const changedIds = [id];
+      if (previousEnd !== -1 && previousEnd !== id) {
+        graph.setState(previousEnd, VertexState.Idle);
+        changedIds.push(previousEnd);
+      }
+      graph.setState(id, VertexState.End);
+      return changedIds;
+    },
+  },
+};
+
 function applyTool(id) {
   if (isRunning) return;
-  const state = graph.getState(id);
-
-  if (tool === "wall") {
-    if (state === VertexState.Start || state === VertexState.End) return;
-    graph.setState(id, VertexState.Wall);
-  } else if (tool === "erase") {
-    if (state === VertexState.Start || state === VertexState.End) return;
-    graph.setState(id, VertexState.Idle);
-  } else if (tool === "start") {
-    if (state === VertexState.Wall || state === VertexState.End) return;
-    const previousStart = graph.getStartId();
-    if (previousStart !== -1 && previousStart !== id) {
-      graph.setState(previousStart, VertexState.Idle);
-      renderCell(previousStart);
-    }
-    graph.setState(id, VertexState.Start);
-  } else if (tool === "end") {
-    if (state === VertexState.Wall || state === VertexState.Start) return;
-    const previousEnd = graph.getEndId();
-    if (previousEnd !== -1 && previousEnd !== id) {
-      graph.setState(previousEnd, VertexState.Idle);
-      renderCell(previousEnd);
-    }
-    graph.setState(id, VertexState.End);
+  const changedIds = PAINT_TOOLS[tool].apply(graph, id);
+  for (const changedId of changedIds) {
+    renderCell(changedId);
   }
-
-  renderCell(id);
 }
 
 boardEl.addEventListener("pointerdown", (e) => {

@@ -57,9 +57,9 @@ export class BestFirst extends SearchAlgorithm {
     const currentDistance = this.vertexInfo[currentId].getCurrentPathLength();
     for (const neighborId of this.graph.getNeighbors(currentId)) {
       if (!this.visitedVertices.has(neighborId)) {
-        this.vertexInfo[neighborId].setPreviousVertex(currentId);
-        this.vertexInfo[neighborId].setCurrentPathLength(
+        this.vertexInfo[neighborId].relaxIfBetter(
           currentDistance + this.graph.getEdgeWeight(currentId, neighborId),
+          currentId,
         );
         this._visit(neighborId);
         this._queue.enqueue(neighborId, this.vertexInfo[neighborId].getHeuristicCost());
