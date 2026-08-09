@@ -42,6 +42,9 @@ export class SearchSession {
     this._elapsedMs = 0;
     this._lastRunStats = null;
     this._lastRunSelection = null;
+    // Populated by onNodeVisited/onNodeExpanded during a step() call, then
+    // drained into actual DOM repaints right after - see _stepOnce().
+    this._pendingRenderIds = [];
 
     this._algorithmInputs = document.querySelectorAll('input[name="algorithm"]');
     this._heuristicInputs = document.querySelectorAll('input[name="heuristic"]');
@@ -55,6 +58,10 @@ export class SearchSession {
     this._saveButton = document.getElementById("save-button");
     this._clearBoardButton = document.getElementById("clear-board-button");
     this._resultNote = document.getElementById("result-note");
+    this._statOperationsEl = document.getElementById("stat-operations");
+    this._statExpandedEl = document.getElementById("stat-expanded");
+    this._statPathLengthEl = document.getElementById("stat-path-length");
+    this._statElapsedEl = document.getElementById("stat-elapsed");
 
     this._algorithmInputs.forEach((input) => {
       input.addEventListener("change", (e) => {
@@ -166,14 +173,20 @@ export class SearchSession {
     this._expandedCount = 0;
     this._elapsedMs = 0;
     this._lastRunStats = null;
-    document.getElementById("stat-operations").textContent = "N/A";
-    document.getElementById("stat-expanded").textContent = "N/A";
-    document.getElementById("stat-path-length").textContent = "N/A";
-    document.getElementById("stat-elapsed").textContent = "N/A";
+    this._statOperationsEl.textContent = "N/A";
+    this._statExpandedEl.textContent = "N/A";
+    this._statPathLengthEl.textContent = "N/A";
+    this._statElapsedEl.textContent = "N/A";
     this._resultNote.textContent = "";
     this._resultNote.className = "mt-2.5 min-h-4 text-xs text-stone-600";
   }
 
+  // onNodeVisited/onNodeExpanded fire synchronously from inside
+  // algorithm.step(), so anything they do runs inside _stepOnce()'s timed
+  // window. They only track what happened here (counters, model state) -
+  // painting the result happens once, after step() returns and the timer
+  // has already stopped, so DOM/rendering cost is never attributed to the
+  // algorithm's own elapsed time.
   _createAlgorithm() {
     const AlgorithmClass = ALGORITHM_CLASSES[this._selection.getAlgorithm()];
     const instance = new AlgorithmClass();
@@ -187,8 +200,7 @@ export class SearchSession {
       if (state !== VertexState.Start && state !== VertexState.End) {
         this._board.graph.setState(id, VertexState.Visited);
       }
-      this._board.renderCell(id);
-      document.getElementById("stat-operations").textContent = String(this._operationsCount);
+      this._pendingRenderIds.push(id);
     });
 
     instance.onNodeExpanded.push((id) => {
@@ -198,9 +210,7 @@ export class SearchSession {
       if (state !== VertexState.Start && state !== VertexState.End) {
         this._board.graph.setState(id, VertexState.Expanded);
       }
-      this._board.renderCell(id);
-      document.getElementById("stat-operations").textContent = String(this._operationsCount);
-      document.getElementById("stat-expanded").textContent = String(this._expandedCount);
+      this._pendingRenderIds.push(id);
     });
 
     return instance;
@@ -233,9 +243,8 @@ export class SearchSession {
     }
     this._board.render();
 
-    document.getElementById("stat-path-length").textContent =
-      pathLength === null ? "N/A" : String(pathLength);
-    document.getElementById("stat-elapsed").textContent = `${this._elapsedMs.toFixed(1)} ms`;
+    this._statPathLengthEl.textContent = pathLength === null ? "N/A" : String(pathLength);
+    this._statElapsedEl.textContent = `${this._elapsedMs.toFixed(1)} ms`;
 
     if (pathLength === null) {
       this._resultNote.textContent = "End is unreachable from Start.";
@@ -260,9 +269,17 @@ export class SearchSession {
 
   _stepOnce() {
     this._ensureAlgorithm();
+    this._pendingRenderIds = [];
+
     const t0 = performance.now();
     const status = this._algorithm.step();
     this._elapsedMs += performance.now() - t0;
+
+    for (const id of this._pendingRenderIds) {
+      this._board.renderCell(id);
+    }
+    this._statOperationsEl.textContent = String(this._operationsCount);
+    this._statExpandedEl.textContent = String(this._expandedCount);
 
     if (status === SearchStatus.Complete) {
       this._finishRun();
