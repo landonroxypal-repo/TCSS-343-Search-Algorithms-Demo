@@ -1,5 +1,5 @@
-import { Graph } from "../src/datamodel/Graph.js";
-import { VertexState } from "../src/datamodel/VertexState.js";
+import { Graph } from "../../src/datamodel/Graph.js";
+import { VertexState } from "../../src/datamodel/VertexState.js";
 
 export const CELL_STATE_CLASS = {
   [VertexState.Idle]: "bg-white",

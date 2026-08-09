@@ -1,7 +1,7 @@
-import { VertexState } from "../src/datamodel/VertexState.js";
-import { Heuristic } from "../src/datamodel/Heuristic.js";
-import { Algorithm } from "../src/datamodel/Algorithm.js";
-import { Analysis } from "../src/Analysis.js";
+import { VertexState } from "../../src/datamodel/VertexState.js";
+import { Heuristic } from "../../src/datamodel/Heuristic.js";
+import { Algorithm } from "../../src/datamodel/Algorithm.js";
+import { Analysis } from "../../src/Analysis.js";
 import { CELL_STATE_CLASS } from "./Board.js";
 
 const ALGORITHM_LABELS = {

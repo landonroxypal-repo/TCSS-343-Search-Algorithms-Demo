@@ -1,6 +1,6 @@
-import { Board } from "./Board.js";
-import { SearchSession } from "./SearchSession.js";
-import { AnalysisPanel } from "./AnalysisPanel.js";
+import { Board } from "./controller-classes/Board.js";
+import { SearchSession } from "./controller-classes/SearchSession.js";
+import { AnalysisPanel } from "./controller-classes/AnalysisPanel.js";
 
 const COLS = 30;
 const ROWS = 20;

@@ -1,14 +1,14 @@
-import { VertexState } from "../src/datamodel/VertexState.js";
-import { Algorithm } from "../src/datamodel/Algorithm.js";
-import { Heuristic } from "../src/datamodel/Heuristic.js";
-import { SearchStatus } from "../src/datamodel/SearchStatus.js";
-import { Statistics } from "../src/datamodel/Statistics.js";
-import { AlgorithmSelection } from "../src/datamodel/AlgorithmSelection.js";
-import { NaiveDFS } from "../src/algorithms/NaiveDFS.js";
-import { BFS } from "../src/algorithms/BFS.js";
-import { Dijkstra } from "../src/algorithms/Dijkstra.js";
-import { AStar } from "../src/algorithms/AStar.js";
-import { BestFirst } from "../src/algorithms/BestFirst.js";
+import { VertexState } from "../../src/datamodel/VertexState.js";
+import { Algorithm } from "../../src/datamodel/Algorithm.js";
+import { Heuristic } from "../../src/datamodel/Heuristic.js";
+import { SearchStatus } from "../../src/datamodel/SearchStatus.js";
+import { Statistics } from "../../src/datamodel/Statistics.js";
+import { AlgorithmSelection } from "../../src/datamodel/AlgorithmSelection.js";
+import { NaiveDFS } from "../../src/algorithms/NaiveDFS.js";
+import { BFS } from "../../src/algorithms/BFS.js";
+import { Dijkstra } from "../../src/algorithms/Dijkstra.js";
+import { AStar } from "../../src/algorithms/AStar.js";
+import { BestFirst } from "../../src/algorithms/BestFirst.js";
 
 const ALGORITHM_CLASSES = {
   [Algorithm.NaiveDFS]: NaiveDFS,
