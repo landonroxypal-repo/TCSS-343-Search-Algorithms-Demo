@@ -222,29 +222,8 @@ export class SearchSession {
     }
   }
 
-  _recoverPath() {
-    const vertexInfo = this._algorithm.getVertexInfo();
-    const graph = this._board.graph;
-    const startId = graph.getStartId();
-    const endId = graph.getEndId();
-
-    if (endId !== startId && vertexInfo[endId].getPreviousVertex() === null) {
-      return null;
-    }
-
-    const path = [endId];
-    let currentId = endId;
-    const maxHops = graph.getVertexCount();
-    for (let hops = 0; currentId !== startId; hops++) {
-      if (hops >= maxHops) return null;
-      currentId = vertexInfo[currentId].getPreviousVertex();
-      path.push(currentId);
-    }
-    return path.reverse();
-  }
-
   _finishRun() {
-    const path = this._recoverPath();
+    const path = this._algorithm.getPath();
     const pathLength = path === null ? null : path.length - 1;
     if (path !== null) {
       // path[0] and path[path.length - 1] are Start/End - leave their state alone.

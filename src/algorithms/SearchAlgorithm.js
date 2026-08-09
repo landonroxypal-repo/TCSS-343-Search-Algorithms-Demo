@@ -39,6 +39,25 @@ export class SearchAlgorithm {
     return this.vertexInfo;
   }
 
+  getPath() {
+    const startId = this.graph.getStartId();
+    const endId = this.graph.getEndId();
+
+    if (endId !== startId && this.vertexInfo[endId].getPreviousVertex() === null) {
+      return null;
+    }
+
+    const path = [endId];
+    let currentId = endId;
+    const maxHops = this.graph.getVertexCount();
+    for (let hops = 0; currentId !== startId; hops++) {
+      if (hops >= maxHops) return null;
+      currentId = this.vertexInfo[currentId].getPreviousVertex();
+      path.push(currentId);
+    }
+    return path.reverse();
+  }
+
   step() {
     throw new Error("step() must be implemented by a SearchAlgorithm subclass");
   }
