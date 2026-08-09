@@ -1,30 +1,33 @@
 import { SearchAlgorithm } from "./SearchAlgorithm.js";
 import { SearchStatus } from "../datamodel/SearchStatus.js";
-import { Heuristic } from "../datamodel/Heuristic.js";
 import { VertexInfo } from "../datamodel/VertexInfo.js";
 import { PriorityQueue } from "./PriorityQueue.js";
+import { HeuristicCalculator } from "./HeuristicCalculator.js";
 
 export class BestFirst extends SearchAlgorithm {
   constructor() {
     super();
     this._queue = new PriorityQueue();
-    this.heuristic = Heuristic.None;
+    this._heuristicCalculator = new HeuristicCalculator();
   }
 
   getHeuristic() {
-    return this.heuristic;
+    return this._heuristicCalculator.getHeuristic();
   }
 
   setHeuristic(heuristic) {
-    this.heuristic = heuristic;
+    this._heuristicCalculator.setHeuristic(heuristic);
   }
 
   initialize(graph) {
     super.initialize(graph);
     this._queue = new PriorityQueue();
 
+    const endId = graph.getEndId();
     for (let id = 0; id < this.vertexInfo.length; id++) {
-      this.vertexInfo[id] = new VertexInfo(this._estimateRemainingCost(id));
+      this.vertexInfo[id] = new VertexInfo(
+        this._heuristicCalculator.estimate(graph, id, endId),
+      );
     }
 
     const startId = graph.getStartId();
@@ -69,29 +72,5 @@ export class BestFirst extends SearchAlgorithm {
   reset() {
     super.reset();
     this._queue = new PriorityQueue();
-  }
-
-  _estimateRemainingCost(id) {
-    const from = this.graph.toRowColumn(id);
-    const to = this.graph.toRowColumn(this.graph.getEndId());
-    const rowDelta = Math.abs(from.getRow() - to.getRow());
-    const columnDelta = Math.abs(from.getColumn() - to.getColumn());
-
-    switch (this.heuristic) {
-      case Heuristic.Manhattan:
-        return rowDelta + columnDelta;
-      case Heuristic.Euclidian:
-        return Math.sqrt(rowDelta * rowDelta + columnDelta * columnDelta);
-      case Heuristic.Chebyshev:
-        return Math.max(rowDelta, columnDelta);
-      case Heuristic.Octile: {
-        const diagonalSteps = Math.min(rowDelta, columnDelta);
-        const straightSteps = Math.abs(rowDelta - columnDelta);
-        return diagonalSteps * Math.SQRT2 + straightSteps;
-      }
-      case Heuristic.None:
-      default:
-        return 0;
-    }
   }
 }
