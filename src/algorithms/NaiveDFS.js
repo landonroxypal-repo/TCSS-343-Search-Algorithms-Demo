@@ -1,7 +1,8 @@
 import { UnweightedSearchAlgorithm } from "./UnweightedSearchAlgorithm.js";
+import { Stack } from "./Stack.js";
 
 export class NaiveDFS extends UnweightedSearchAlgorithm {
-  _removeNext() {
-    return this.dataStructure.pop();
+  _createDataStructure() {
+    return new Stack();
   }
 }

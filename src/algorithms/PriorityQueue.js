@@ -23,7 +23,7 @@ export class PriorityQueue {
     }
   }
 
-  dequeueMin() {
+  dequeue() {
     if (this.isEmpty()) {
       return null;
     }

@@ -46,7 +46,7 @@ export class BestFirst extends SearchAlgorithm {
       return this.status;
     }
 
-    const currentId = this._queue.dequeueMin();
+    const currentId = this._queue.dequeue();
     this._expand(currentId);
 
     if (currentId === this.graph.getEndId()) {

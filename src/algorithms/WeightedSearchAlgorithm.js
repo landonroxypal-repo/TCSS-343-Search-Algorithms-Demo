@@ -73,7 +73,7 @@ export class WeightedSearchAlgorithm extends SearchAlgorithm {
 
   _popNextUnfinalized() {
     while (!this._queue.isEmpty()) {
-      const id = this._queue.dequeueMin();
+      const id = this._queue.dequeue();
       if (!this._finalizedVertices.has(id)) {
         return id;
       }

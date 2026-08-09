@@ -12,50 +12,50 @@ describe("PriorityQueue", () => {
     expect(queue.isEmpty()).toBe(false);
   });
 
-  test("dequeueMin on an empty queue returns null", () => {
+  test("dequeue on an empty queue returns null", () => {
     const queue = new PriorityQueue();
-    expect(queue.dequeueMin()).toBeNull();
+    expect(queue.dequeue()).toBeNull();
   });
 
-  test("dequeueMin returns the id of the only entry present", () => {
+  test("dequeue returns the id of the only entry present", () => {
     const queue = new PriorityQueue();
     queue.enqueue("a", 5);
-    expect(queue.dequeueMin()).toBe("a");
+    expect(queue.dequeue()).toBe("a");
   });
 
-  test("dequeueMin removes the returned entry from the queue", () => {
+  test("dequeue removes the returned entry from the queue", () => {
     const queue = new PriorityQueue();
     queue.enqueue("a", 5);
     expect(queue.isEmpty()).toBe(false);
-    queue.dequeueMin();
+    queue.dequeue();
     expect(queue.isEmpty()).toBe(true);
   });
 
-  test("dequeueMin returns the id with the smallest priority when priorities are already increasing", () => {
+  test("dequeue returns the id with the smallest priority when priorities are already increasing", () => {
     const queue = new PriorityQueue();
     queue.enqueue("a", 1);
     queue.enqueue("b", 3);
     queue.enqueue("c", 5);
-    expect(queue.dequeueMin()).toBe("a");
+    expect(queue.dequeue()).toBe("a");
   });
 
-  test("dequeueMin returns the id with the smallest priority when priorities are decreasing", () => {
+  test("dequeue returns the id with the smallest priority when priorities are decreasing", () => {
     const queue = new PriorityQueue();
     queue.enqueue("a", 5);
     queue.enqueue("b", 3);
     queue.enqueue("c", 1);
-    expect(queue.dequeueMin()).toBe("c");
+    expect(queue.dequeue()).toBe("c");
   });
 
-  test("repeated dequeueMin calls drain the queue in priority order", () => {
+  test("repeated dequeue calls drain the queue in priority order", () => {
     const queue = new PriorityQueue();
     queue.enqueue("a", 5);
     queue.enqueue("b", 1);
     queue.enqueue("c", 3);
 
-    expect(queue.dequeueMin()).toBe("b");
-    expect(queue.dequeueMin()).toBe("c");
-    expect(queue.dequeueMin()).toBe("a");
-    expect(queue.dequeueMin()).toBeNull();
+    expect(queue.dequeue()).toBe("b");
+    expect(queue.dequeue()).toBe("c");
+    expect(queue.dequeue()).toBe("a");
+    expect(queue.dequeue()).toBeNull();
   });
 });
