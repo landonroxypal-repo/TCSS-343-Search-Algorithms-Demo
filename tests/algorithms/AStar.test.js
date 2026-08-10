@@ -71,7 +71,7 @@ describe("AStar", () => {
     // produces a distinct, hand-checkable value at Start.
     const HEURISTIC_EXPECTATIONS = [
       { heuristic: Heuristic.Manhattan, expected: 7 },
-      { heuristic: Heuristic.Euclidian, expected: 5 },
+      { heuristic: Heuristic.Euclidean, expected: 5 },
       { heuristic: Heuristic.Chebyshev, expected: 4 },
       { heuristic: Heuristic.Octile, expected: 3 * Math.SQRT2 + 1 },
       { heuristic: Heuristic.None, expected: 0 },

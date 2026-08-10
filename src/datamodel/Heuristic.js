@@ -1,6 +1,6 @@
 export const Heuristic = Object.freeze({
   None: "None",
-  Euclidian: "Euclidian",
+  Euclidean: "Euclidean",
   Manhattan: "Manhattan",
   Chebyshev: "Chebyshev",
   Octile: "Octile",

@@ -22,7 +22,7 @@ export class HeuristicCalculator {
     switch (this.heuristic) {
       case Heuristic.Manhattan:
         return rowDelta + columnDelta;
-      case Heuristic.Euclidian:
+      case Heuristic.Euclidean:
         return Math.sqrt(rowDelta * rowDelta + columnDelta * columnDelta);
       case Heuristic.Chebyshev:
         return Math.max(rowDelta, columnDelta);

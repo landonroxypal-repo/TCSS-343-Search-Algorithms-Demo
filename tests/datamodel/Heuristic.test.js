@@ -3,7 +3,7 @@ import { Heuristic } from "../../src/datamodel/Heuristic.js";
 describe("Heuristic", () => {
   const expectedKeys = [
     "None",
-    "Euclidian",
+    "Euclidean",
     "Manhattan",
     "Chebyshev",
     "Octile",

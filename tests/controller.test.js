@@ -122,14 +122,14 @@ describe("controller: saving an analysis", () => {
     // The user changes their mind about what to run *after* the run
     // finished, but before clicking Save.
     selectRadio("algorithm", "AStar");
-    selectRadio("heuristic", "Euclidian");
+    selectRadio("heuristic", "Euclidean");
 
     document.getElementById("save-button").click();
 
     const analysisListText = document.getElementById("analysis-list").textContent;
     expect(analysisListText).toContain("BFS");
     expect(analysisListText).not.toContain("A*");
-    expect(analysisListText).not.toContain("Euclidian");
+    expect(analysisListText).not.toContain("Euclidean");
   });
 });
 
@@ -162,7 +162,7 @@ describe("controller: algorithm and heuristic radio buttons", () => {
   // Heuristic radios only matter for AStar/BestFirst - exercised against
   // AStar alone, since that's enough to prove the radio-to-state wiring
   // works without a full algorithm x heuristic combinatorial sweep.
-  test.each(["Manhattan", "Euclidian", "Chebyshev", "Octile"])(
+  test.each(["Manhattan", "Euclidean", "Chebyshev", "Octile"])(
     "selecting the %s heuristic radio runs and saves that heuristic",
     async (heuristicValue) => {
       await loadController();

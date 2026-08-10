@@ -31,8 +31,8 @@ describe("HeuristicCalculator", () => {
       expect(calculator.estimate(graph, fromId, toId)).toBe(7);
     });
 
-    test("Euclidian returns the straight-line distance", () => {
-      const calculator = new HeuristicCalculator(Heuristic.Euclidian);
+    test("Euclidean returns the straight-line distance", () => {
+      const calculator = new HeuristicCalculator(Heuristic.Euclidean);
       expect(calculator.estimate(graph, fromId, toId)).toBe(5);
     });
 
