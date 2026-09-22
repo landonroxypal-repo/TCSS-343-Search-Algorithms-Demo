@@ -1,5 +1,5 @@
 <div align="center">
 
-# TCES-330-16-BIT-PROCESSOR
+# TCSS-343-Search-Algorithms-Demo
 
 *⚠️Documentation Under Construction⚠️*
