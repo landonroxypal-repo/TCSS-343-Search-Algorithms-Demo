@@ -18,7 +18,7 @@ import { VertexState } from "../src/datamodel/VertexState.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const indexHtml = readFileSync(
-  path.join(__dirname, "../public/index.html"),
+  path.join(__dirname, "../index.html"),
   "utf8",
 );
 const bodyHtml = indexHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i)[1];
